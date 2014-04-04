@@ -37,8 +37,8 @@ public final class R {
         public static final int album_art=0x7f080014;
         public static final int bottom_last_week_line=0x7f080028;
         public static final int bpm_down=0x7f08001c;
-        public static final int bpm_num=0x7f080018;
-        public static final int bpm_up=0x7f08001b;
+        public static final int bpm_num=0x7f08001b;
+        public static final int bpm_up=0x7f08001a;
         public static final int button1=0x7f080008;
         public static final int editText1=0x7f080011;
         public static final int imageView1=0x7f080017;
@@ -53,7 +53,7 @@ public final class R {
         public static final int play=0x7f080012;
         public static final int previous_song=0x7f080016;
         public static final int seekBar1=0x7f080013;
-        public static final int start_run_button=0x7f08001a;
+        public static final int start_run_button=0x7f080018;
         public static final int stat_title=0x7f08001e;
         public static final int textView1=0x7f080000;
         public static final int textView10=0x7f080009;
