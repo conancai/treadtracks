@@ -2,6 +2,126 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
-    
+
+    <ImageButton
+        android:id="@+id/play"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/icon_22164" />
+
+    <SeekBar
+        android:id="@+id/seekBar1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/play"
+        android:layout_alignParentLeft="true" />
+
+    <ImageView
+        android:id="@+id/album_art"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_above="@+id/seekBar1"
+        android:layout_centerHorizontal="true"
+        android:background="#C0C0C0"
+        android:src="@drawable/icon_5029" />
+
+    <ImageButton
+        android:id="@+id/next_song"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignRight="@+id/album_art"
+        android:layout_below="@+id/seekBar1"
+        android:background="@drawable/ff" />
+
+    <ImageButton
+        android:id="@+id/previous_song"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignLeft="@+id/album_art"
+        android:layout_alignTop="@+id/play"
+        android:background="@drawable/back" />
+
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="400sp"
+        android:layout_height="60sp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:background="#C0C0C0" />
+
+    <Button
+        android:id="@+id/start_run_button"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:layout_alignTop="@+id/album_art"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="102dp"
+        android:alpha=".8"
+        android:background="@drawable/rounded_button"
+        android:text="Start Run"
+        android:textColor="#FFFFFF"
+        android:textSize="30sp" />
+
+    <TextView
+        android:id="@+id/BPM"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/play"
+        android:layout_alignTop="@+id/bpm_up"
+        android:layout_marginTop="20dp"
+        android:text="BPM"
+        android:textColor="#FFFFFF"
+        android:textSize="30sp" />
+
+    <TextView
+        android:id="@+id/bpm_num"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/BPM"
+        android:layout_alignBottom="@+id/BPM"
+        android:layout_alignRight="@+id/textView3"
+        android:layout_marginRight="22dp"
+        android:text="0"
+        android:textColor="#FFFFFF"
+        android:textSize="30sp" />
+
+    <ImageButton
+        android:id="@+id/bpm_up"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_above="@+id/bpm_down"
+        android:layout_alignRight="@+id/start_run_button"
+        android:background="@drawable/icon_22173" />
+
+    <ImageButton
+        android:id="@+id/bpm_down"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignBottom="@+id/album_art"
+        android:layout_alignLeft="@+id/bpm_up"
+        android:background="@drawable/icon_22174" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView3"
+        android:layout_below="@+id/textView3"
+        android:text="Artist Name"
+        android:textColor="#FFFFFF" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="14dp"
+        android:layout_toLeftOf="@+id/BPM"
+        android:text="Song Name"
+        android:textColor="#303030"
+        android:textSize="20sp" />
 
 </RelativeLayout>
