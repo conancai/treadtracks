@@ -43,13 +43,15 @@ public final class R {
         public static final int top_last_week_line=0x7f080009;
     }
     public static final class layout {
-        public static final int activity_main=0x7f030000;
-        public static final int activity_player_page=0x7f030001;
-        public static final int activity_stats_page=0x7f030002;
+        public static final int activity_calibration_page=0x7f030000;
+        public static final int activity_main=0x7f030001;
+        public static final int activity_player_page=0x7f030002;
+        public static final int activity_stats_page=0x7f030003;
     }
     public static final class menu {
-        public static final int main=0x7f070000;
-        public static final int stats_page=0x7f070001;
+        public static final int calibration_page=0x7f070000;
+        public static final int main=0x7f070001;
+        public static final int stats_page=0x7f070002;
     }
     public static final class string {
         public static final int action_settings=0x7f050001;
@@ -58,6 +60,7 @@ public final class R {
         public static final int last_week=0x7f050006;
         public static final int stats_title=0x7f050004;
         public static final int this_week=0x7f050005;
+        public static final int title_activity_calibration_page=0x7f050007;
         public static final int title_activity_stats_page=0x7f050003;
     }
     public static final class style {

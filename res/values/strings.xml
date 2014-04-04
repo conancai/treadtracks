@@ -8,5 +8,6 @@
     <string name="stats_title">Run Stats</string>
     <string name="this_week">This Week</string>
     <string name="last_week">Last Week</string>
+    <string name="title_activity_calibration_page">CalibrationPage</string>
 
 </resources>

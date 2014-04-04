@@ -26,6 +26,10 @@
             android:name="com.example.treadtracksproto.StatsPage"
             android:label="@string/title_activity_stats_page" >
         </activity>
+        <activity
+            android:name="com.example.treadtracksproto.CalibrationPage"
+            android:label="@string/title_activity_calibration_page" >
+        </activity>
     </application>
 
 </manifest>
