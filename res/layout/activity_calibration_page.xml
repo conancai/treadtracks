@@ -92,6 +92,7 @@
         android:layout_below="@+id/textView8"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="30dp"
+        android:background="@drawable/rounded_button"
         android:text="Finish Run" />
 
     <TextView
@@ -140,7 +141,7 @@
         android:layout_above="@+id/textView3"
         android:layout_marginRight="18dp"
         android:layout_toLeftOf="@+id/textView12"
-        android:text="200"
+        android:text="2000"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <TextView
@@ -154,12 +155,13 @@
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <EditText
-        android:id="@+id/editText1"
+        android:id="@+id/distanceEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/textView9"
+
         android:layout_alignBottom="@+id/textView9"
-        android:layout_toLeftOf="@+id/textView14"
+        android:layout_alignRight="@+id/textView13"
+        android:layout_marginLeft="30dp"
         android:layout_toRightOf="@+id/textView3"
         android:ems="10"
         android:inputType="numberDecimal"
@@ -170,22 +172,22 @@
     </EditText>
 
     <TextView
-        android:id="@+id/textView17"
+        android:id="@+id/paceText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@+id/textView11"
         android:layout_alignBottom="@+id/textView11"
-        android:layout_alignLeft="@+id/editText1"
+        android:layout_alignLeft="@+id/distanceEdit"
         android:layout_marginLeft="23dp"
         android:text="9"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <TextView
-        android:id="@+id/textView16"
+        android:id="@+id/strideText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/textView7"
-        android:layout_alignLeft="@+id/textView17"
+        android:layout_alignLeft="@+id/paceText"
         android:text="5.5"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
