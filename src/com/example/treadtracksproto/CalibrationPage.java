@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Menu;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -74,13 +75,13 @@ public class CalibrationPage extends Activity {
 	
 	private void recalculatePace() {
 		// Updates the pace on the page
-		// time in seconds
-		// distance in miles
-		// want miles per hour
-		// 1 hr / 
 		double newPace = (60 * 60 / (double) time) * distance;
 		paceText.setText(String.format("%.2f",  newPace));
 		paceText.invalidate();
+	}
+	
+	public void finishRun(View v) {
+		finish();
 	}
 
 }
