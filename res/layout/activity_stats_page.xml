@@ -73,12 +73,52 @@
                     android:text="2/14 Friday"
                     android:textSize="18sp" />
 
-                <TextView
+                <EditText
+                    android:id="@+id/lastDistanceEdit"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentRight="true"
-                    android:text="3 Mi"
+                    android:layout_marginRight="20dp"
+                    android:text="3"
                     android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/lastDistanceFinal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginRight="30dp"
+                    android:textSize="18sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBaseline="@id/lastDistanceEdit"
+                    android:layout_alignParentRight="true"
+                    android:layout_toLeftOf="@id/lastDistanceEdit"
+                    android:text="Mi."
+                    android:textSize="18sp" />
+
+                <Button
+                    android:id="@+id/confirmButton"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_alignBottom="@+id/lastDistanceEdit"
+                    android:layout_toLeftOf="@id/lastDistanceEdit"
+                    android:background="@drawable/icon_checkmark"
+                    android:onClick="confirm" />
+
+                <Button
+                    android:id="@+id/clearButton"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_alignBaseline="@id/confirmButton"
+                    android:layout_alignBottom="@id/confirmButton"
+                    android:layout_marginRight="15dp"
+                    android:layout_toLeftOf="@id/confirmButton"
+                    android:background="@drawable/clear_icon"
+                    android:onClick="reset" />
             </RelativeLayout>
 
             <RelativeLayout
