@@ -10,23 +10,8 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="16dp"
-        android:background="@drawable/icon_22164" />
-
-    <SeekBar
-        android:id="@+id/seekBar1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/play"
-        android:layout_alignParentLeft="true" />
-
-    <ImageView
-        android:id="@+id/album_art"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        android:layout_above="@+id/seekBar1"
-        android:layout_centerHorizontal="true"
-        android:background="#C0C0C0"
-        android:src="@drawable/icon_5029" />
+        android:background="@drawable/icon_22164"
+        android:contentDescription="@string/play" />
 
     <ImageButton
         android:id="@+id/next_song"
@@ -34,7 +19,8 @@
         android:layout_height="40dp"
         android:layout_alignRight="@+id/album_art"
         android:layout_below="@+id/seekBar1"
-        android:background="@drawable/ff" />
+        android:background="@drawable/ff"
+        android:contentDescription="@string/next_song" />
 
     <ImageButton
         android:id="@+id/previous_song"
@@ -42,67 +28,17 @@
         android:layout_height="40dp"
         android:layout_alignLeft="@+id/album_art"
         android:layout_alignTop="@+id/play"
-        android:background="@drawable/back" />
+        android:background="@drawable/back"
+        android:contentDescription="@string/previous_song" />
 
     <ImageView
-        android:id="@+id/imageView1"
+        android:id="@+id/gray_background"
         android:layout_width="400sp"
         android:layout_height="60sp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:background="#C0C0C0" />
-
-    <Button
-        android:id="@+id/start_run_button"
-        android:layout_width="200dp"
-        android:layout_height="60dp"
-        android:layout_alignTop="@+id/album_art"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="102dp"
-        android:alpha=".8"
-        android:background="@drawable/rounded_button"
-        android:text="Start Run"
-        android:textColor="#FFFFFF"
-        android:textSize="30sp" />
-
-    <TextView
-        android:id="@+id/BPM"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/play"
-        android:layout_alignTop="@+id/bpm_up"
-        android:layout_marginTop="20dp"
-        android:text="BPM"
-        android:textColor="#FFFFFF"
-        android:textSize="30sp" />
-
-    <TextView
-        android:id="@+id/bpm_num"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/BPM"
-        android:layout_alignBottom="@+id/BPM"
-        android:layout_alignRight="@+id/textView3"
-        android:layout_marginRight="22dp"
-        android:text="0"
-        android:textColor="#FFFFFF"
-        android:textSize="30sp" />
-
-    <ImageButton
-        android:id="@+id/bpm_up"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_above="@+id/bpm_down"
-        android:layout_alignRight="@+id/start_run_button"
-        android:background="@drawable/icon_22173" />
-
-    <ImageButton
-        android:id="@+id/bpm_down"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_alignBottom="@+id/album_art"
-        android:layout_alignLeft="@+id/bpm_up"
-        android:background="@drawable/icon_22174" />
+        android:background="#C0C0C0"
+        android:contentDescription="@string/gray_background" />
 
     <TextView
         android:id="@+id/textView2"
@@ -110,7 +46,7 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/textView3"
         android:layout_below="@+id/textView3"
-        android:text="Artist Name"
+        android:text="@string/artist_name"
         android:textColor="#FFFFFF" />
 
     <TextView
@@ -120,8 +56,77 @@
         android:layout_alignParentTop="true"
         android:layout_marginTop="14dp"
         android:layout_toLeftOf="@+id/BPM"
-        android:text="Song Name"
+        android:text="@string/song_name"
         android:textColor="#303030"
         android:textSize="20sp" />
+
+    <ImageView
+        android:id="@+id/album_art"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_below="@+id/gray_background"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="17dp"
+        android:background="#C0C0C0"
+        android:contentDescription="@string/album_art"
+        android:src="@drawable/icon_5029" />
+
+    <Button
+        android:id="@+id/start_run"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:layout_alignBottom="@+id/album_art"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="114dp"
+        android:alpha=".8"
+        android:background="@drawable/rounded_button"
+        android:text="@string/start_run"
+        android:textColor="#FFFFFF"
+        android:textSize="30sp" />
+
+    <SeekBar
+        android:id="@+id/seekBar1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/play"
+        android:layout_alignParentLeft="true" />
+
+    <TextView
+        android:id="@+id/BPM"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/seekBar1"
+        android:layout_centerHorizontal="true"
+        android:text="@string/bpm"
+        android:textColor="#000000"
+        android:textSize="30sp" />
+
+    <TextView
+        android:id="@+id/bpm_num"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/seekBar1"
+        android:layout_alignRight="@+id/textView2"
+        android:text="@string/bpm_number"
+        android:textColor="#000000"
+        android:textSize="30sp" />
+
+    <ImageButton
+        android:id="@+id/bpm_up"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignRight="@+id/start_run"
+        android:layout_below="@+id/album_art"
+        android:background="@drawable/icon_22173"
+        android:contentDescription="@string/increase_bpm" />
+
+    <ImageButton
+        android:id="@+id/bpm_down"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignRight="@+id/start_run"
+        android:layout_below="@+id/bpm_up"
+        android:background="@drawable/icon_22174"
+        android:contentDescription="@string/decrease_bpm" />
 
 </RelativeLayout>

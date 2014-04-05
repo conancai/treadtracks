@@ -10,5 +10,19 @@
     <string name="last_week">Last Week</string>
     <string name="title_activity_calibration_page">CalibrationPage</string>
     <string name="title_activity_running">RunningActivity</string>
+    
+    <!-- activity player page strings -->
+    <string name="song_name">Song Name</string>
+    <string name="artist_name">Artist Name</string>
+    <string name="start_run">Start Run</string>
+    <string name="bpm">BPM</string>
+    <string name="bpm_number">0</string>
+    <string name="album_art">Album art</string>
+    <string name="play">Play button</string>
+    <string name="next_song">Next song button</string>
+    <string name="previous_song">Previous song button</string>
+    <string name="increase_bpm">Increase BPM button</string>
+    <string name="decrease_bpm">Decrease BPM button</string>
+    <string name="gray_background">Gray background behind album art</string>
 
 </resources>
