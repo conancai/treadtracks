@@ -40,7 +40,7 @@ public final class R {
         public static final int bpm_num=0x7f08001b;
         public static final int bpm_up=0x7f08001a;
         public static final int button1=0x7f080008;
-        public static final int editText1=0x7f080011;
+        public static final int editText1=0x7f08000f;
         public static final int imageView1=0x7f080017;
         public static final int last_pace_time=0x7f08002c;
         public static final int last_week=0x7f080027;
@@ -61,8 +61,8 @@ public final class R {
         public static final int textView12=0x7f08000c;
         public static final int textView13=0x7f08000d;
         public static final int textView14=0x7f08000e;
-        public static final int textView16=0x7f080010;
-        public static final int textView17=0x7f08000f;
+        public static final int textView16=0x7f080011;
+        public static final int textView17=0x7f080010;
         public static final int textView2=0x7f080001;
         public static final int textView3=0x7f080003;
         public static final int textView4=0x7f080004;
@@ -83,12 +83,14 @@ public final class R {
         public static final int activity_calibration_page=0x7f030000;
         public static final int activity_main=0x7f030001;
         public static final int activity_player_page=0x7f030002;
-        public static final int activity_stats_page=0x7f030003;
+        public static final int activity_running=0x7f030003;
+        public static final int activity_stats_page=0x7f030004;
     }
     public static final class menu {
         public static final int calibration_page=0x7f070000;
         public static final int main=0x7f070001;
-        public static final int stats_page=0x7f070002;
+        public static final int running=0x7f070002;
+        public static final int stats_page=0x7f070003;
     }
     public static final class string {
         public static final int action_settings=0x7f050001;
@@ -98,6 +100,7 @@ public final class R {
         public static final int stats_title=0x7f050004;
         public static final int this_week=0x7f050005;
         public static final int title_activity_calibration_page=0x7f050007;
+        public static final int title_activity_running=0x7f050008;
         public static final int title_activity_stats_page=0x7f050003;
     }
     public static final class style {

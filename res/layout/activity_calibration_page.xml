@@ -159,7 +159,7 @@
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@+id/textView9"
         android:layout_alignBottom="@+id/textView9"
-        android:layout_alignRight="@+id/textView13"
+        android:layout_toLeftOf="@+id/textView14"
         android:layout_toRightOf="@+id/textView3"
         android:ems="10"
         android:inputType="numberDecimal"
@@ -173,8 +173,10 @@
         android:id="@+id/textView17"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/textView8"
-        android:layout_toLeftOf="@+id/textView14"
+        android:layout_alignBaseline="@+id/textView11"
+        android:layout_alignBottom="@+id/textView11"
+        android:layout_alignLeft="@+id/editText1"
+        android:layout_marginLeft="23dp"
         android:text="9"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 

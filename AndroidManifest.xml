@@ -16,11 +16,6 @@
         <activity
             android:name="com.example.treadtracksproto.MainActivity"
             android:label="@string/app_name" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity
             android:name="com.example.treadtracksproto.StatsPage"
@@ -29,6 +24,19 @@
         <activity
             android:name="com.example.treadtracksproto.CalibrationPage"
             android:label="@string/title_activity_calibration_page" >
+        </activity>
+        <activity
+            android:name="com.example.treadtracksproto.RunActivity"
+            android:label="@string/title_activity_calibration_page" >
+        </activity>
+        <activity
+            android:name="com.example.treadtracksproto.RunningActivity"
+            android:label="@string/title_activity_running" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
     </application>
 
