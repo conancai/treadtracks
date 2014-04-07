@@ -24,6 +24,7 @@ public class StatsPage extends Activity {
 	}
 
 	public void confirm(View v) {
+		estimatedDistance = distBox.getText().toString();
 		Button confirm = (Button) findViewById(R.id.confirmButton);
 		Button clear = (Button) findViewById(R.id.clearButton);
 		confirm.setVisibility(View.GONE);
