@@ -40,7 +40,8 @@ public class StatsPage extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.stats_page, menu);
+		// getMenuInflater().inflate(R.menu.stats_page, menu);
+		// No menu on non-main pages yet
 		return true;
 	}
 

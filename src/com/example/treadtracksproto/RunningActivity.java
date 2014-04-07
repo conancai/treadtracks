@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
@@ -36,11 +37,11 @@ public class RunningActivity extends Activity {
 					startRun.setBackgroundResource(R.drawable.rounded_button_red);
 				} else { // else take user to the calibration page
 					isRunning = false;
+					startRun.setText("Start Run");
+					startRun.setBackgroundResource(R.drawable.rounded_button);
 					if (isFirstTimeRunning) {
 						isFirstTimeRunning = false;
 						startActivity(calibrationIntent);
-						startRun.setText("Start Run");
-						startRun.setBackgroundResource(R.drawable.rounded_button);
 					} else {
 						startActivity(statsPageIntent);
 					} // if, else
@@ -56,5 +57,15 @@ public class RunningActivity extends Activity {
 		getMenuInflater().inflate(R.menu.running, menu);
 		return true;
 	}
+	
+	@Override
+	  public boolean onOptionsItemSelected(MenuItem item) {
+	    switch (item.getItemId()) {
+	    case R.id.action_previous_runs:
+	      startActivity(new Intent(this, StatsPage.class));
+	      break;
+	    }
+	    return super.onOptionsItemSelected(item);
+	  }
 
 }
