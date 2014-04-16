@@ -7,6 +7,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import com.parse.Parse;
+import com.parse.ParseAnalytics;
 
 public class StatsPage extends Activity {
 

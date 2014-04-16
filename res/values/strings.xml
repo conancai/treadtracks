@@ -25,5 +25,6 @@
     <string name="increase_bpm">Increase BPM button</string>
     <string name="decrease_bpm">Decrease BPM button</string>
     <string name="gray_background">Gray background behind album art</string>
+    <string name="title_activity_application">Application</string>
 
 </resources>
