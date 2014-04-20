@@ -27,4 +27,11 @@
     <string name="gray_background">Gray background behind album art</string>
     <string name="title_activity_application">Application</string>
 
+    <color name="red">#FF0000</color>
+
+    <string name="date">Date: </string>
+    <string name="dist">Dist: </string>
+    <string name="pace">Pace: </string>
+    <string name="time">Time: </string>
+
 </resources>
