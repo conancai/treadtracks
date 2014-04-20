@@ -29,4 +29,9 @@
 
     <color name="red">#FF0000</color>
 
+    <string name="date">Date: </string>
+    <string name="dist">Dist: </string>
+    <string name="pace">Pace: </string>
+    <string name="time">Time: </string>
+
 </resources>

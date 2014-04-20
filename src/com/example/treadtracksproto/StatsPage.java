@@ -68,7 +68,7 @@ public class StatsPage extends Activity {
 		postsView.setAdapter(posts);
 
 		AlertDialog.Builder alert = new AlertDialog.Builder(StatsPage.this);
-		alert.setTitle("Enter Distance");
+		alert.setTitle("Enter Distance Ran In Miles");
 		final EditText input = new EditText(StatsPage.this);
 		input.setInputType(InputType.TYPE_CLASS_TEXT
 				| InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
