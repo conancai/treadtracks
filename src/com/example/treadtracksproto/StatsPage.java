@@ -20,9 +20,6 @@ import com.parse.SaveCallback;
 
 public class StatsPage extends Activity {
 
-	private String estimatedDistance;
-	private EditText distBox;
-	private TextView finalText;
 	private ParseQueryAdapter.QueryFactory<StatsPost> factory;
 	private ParseQueryAdapter<StatsPost> posts;
 
@@ -57,10 +54,6 @@ public class StatsPage extends Activity {
 						.findViewById(R.id.distView);
 				TextView paceView = (TextView) view.findViewById(R.id.paceView);
 				TextView timeView = (TextView) view.findViewById(R.id.timeView);
-				String date = post.getDate();
-				String dist = post.getDistance();
-				String pace = post.getPace();
-				String time = post.getTime();
 				dateView.setText(post.getDate());
 				distanceView.setText(post.getDistance());
 				paceView.setText(post.getPace());
@@ -110,26 +103,7 @@ public class StatsPage extends Activity {
 					}
 				});
 		alert.create().show();
-
-		// finalText = (TextView) findViewById(R.id.lastDistanceFinal);
-		// distBox = (EditText) findViewById(R.id.lastDistanceEdit);
-		// estimatedDistance = distBox.getText().toString();
 	}
-
-	// public void confirm(View v) {
-	// estimatedDistance = distBox.getText().toString();
-	// Button confirm = (Button) findViewById(R.id.confirmButton);
-	// Button clear = (Button) findViewById(R.id.clearButton);
-	// confirm.setVisibility(View.GONE);
-	// clear.setVisibility(View.GONE);
-	// distBox.setVisibility(View.GONE);
-	// finalText.setText(estimatedDistance);
-	// finalText.setVisibility(View.VISIBLE);
-	// }
-	//
-	// public void reset(View v) {
-	// distBox.setText(estimatedDistance, TextView.BufferType.EDITABLE);
-	// }
 
 	@Override
 	protected void onResume() {
