@@ -25,17 +25,19 @@
             android:textSize="24sp" />
 
         <View
+            android:id="@+id/statsLine"
             android:layout_width="fill_parent"
             android:layout_height="1dp"
             android:layout_below="@id/stat_title"
             android:background="@android:color/darker_gray" />
-    </RelativeLayout>
 
-    <ListView
-        android:id="@+id/stats_view"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_weight="1" >
-    </ListView>
+        <ListView
+            android:id="@+id/stats_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/statsLine"
+            android:layout_marginTop="10dp" >
+        </ListView>
+    </RelativeLayout>
 
 </LinearLayout>

@@ -27,4 +27,6 @@
     <string name="gray_background">Gray background behind album art</string>
     <string name="title_activity_application">Application</string>
 
+    <color name="red">#FF0000</color>
+
 </resources>

@@ -54,7 +54,7 @@ public class StatsPage extends Activity {
 				super.getItemView(post, view, parent);
 				TextView dateView = (TextView) view.findViewById(R.id.dateView);
 				TextView distanceView = (TextView) view
-						.findViewById(R.id.distanceView);
+						.findViewById(R.id.distView);
 				TextView paceView = (TextView) view.findViewById(R.id.paceView);
 				TextView timeView = (TextView) view.findViewById(R.id.timeView);
 				String date = post.getDate();
