@@ -8,6 +8,7 @@ import java.util.Stack;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
@@ -141,29 +142,45 @@ public class RunningActivity extends Activity {
             @Override
             public void onClick(View view) {
                 prevSongs.push(currentSongIndex);
+                if(!isRunning){
+                    isRunning = true;
+                    startRun.setText(R.string.stop_run);
+                    startRun.setBackgroundResource(R.drawable.rounded_button_red);
+                }
                 if(!nextSongs.empty()){
                     setNewSong(nextSongs.pop());
                 } else {
                     setNewSong(pickRandomSong());
                 }
+                btnPlay.setBackgroundResource(R.drawable.icon_22165);
+
+
             }
         });
 
         btnPrevious.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(st.getPlayedDuration() < 5){
+                if(st.getPlayedDuration() > 5000000l){ // 5 seconds?
                     st.pause();
                     st.seekTo(0,true);
                     st.play();
                 } else {
                     nextSongs.push(currentSongIndex);
+                    if(!isRunning){
+                        isRunning = true;
+                        startRun.setText(R.string.stop_run);
+                        startRun.setBackgroundResource(R.drawable.rounded_button_red);
+                        setNewSong(currentSongIndex);
+                    }
                     if(!prevSongs.empty()){
                         setNewSong(prevSongs.pop());
                     } else {
                         setNewSong(pickRandomSong());
                     }
                 }
+                btnPlay.setBackgroundResource(R.drawable.icon_22165);
+
             }
         });
 
