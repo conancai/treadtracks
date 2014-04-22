@@ -8,6 +8,7 @@
 			<attribute name="javadoc_location" value="file:/Users/Ian/160_proto/libs/Parse-1.4.3/Parse-1.4.3-javadoc/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="libs/soundtouch-android.jar"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="output" path="bin/classes"/>
