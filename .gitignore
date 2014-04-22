@@ -7,5 +7,7 @@
 *.DS_Store
 *.swp
 *.out
+*.iml
 bin/
 gen/
+.idea/

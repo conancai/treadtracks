@@ -38,7 +38,6 @@
         android:layout_alignLeft="@+id/textView3"
         android:layout_alignRight="@+id/textView3"
         android:layout_below="@+id/textView3"
-        android:text="@string/artist_name"
         android:textColor="#FFFFFF" />
 
     <ImageView
@@ -111,7 +110,6 @@
         android:layout_alignParentTop="true"
         android:layout_alignRight="@+id/album_art"
         android:layout_marginTop="10dp"
-        android:text="@string/song_name"
         android:textColor="#303030"
         android:textSize="20sp" />
 
