@@ -152,8 +152,6 @@ public class RunningActivity extends Activity {
                 } else {
                     setNewSong(pickRandomSong());
                 }
-                btnPlay.setBackgroundResource(R.drawable.icon_22165);
-
 
             }
         });
@@ -179,8 +177,6 @@ public class RunningActivity extends Activity {
                         setNewSong(pickRandomSong());
                     }
                 }
-                btnPlay.setBackgroundResource(R.drawable.icon_22165);
-
             }
         });
 
@@ -192,7 +188,6 @@ public class RunningActivity extends Activity {
                     startRun.setText(R.string.stop_run);
                     startRun.setBackgroundResource(R.drawable.rounded_button_red);
                     setNewSong(currentSongIndex);
-                    btnPlay.setBackgroundResource(R.drawable.icon_22165);
                 } else { // else take user to the calibration page
                     isRunning = false;
                     startRun.setText(R.string.start_run);
@@ -362,6 +357,7 @@ public class RunningActivity extends Activity {
             songName.setText(item.getTitle());
             artistName.setText(item.getArtist());
             albumArt.setImageBitmap(item.getAlbumArt());
+            btnPlay.setBackgroundResource(R.drawable.icon_22165);
             st.play();
             isPlaying = true;
         } catch (IOException e) {
@@ -515,16 +511,16 @@ public class RunningActivity extends Activity {
 		//mediaPlayer.release();
 	}
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if(isPlaying){
-            st.pause();
-            btnPlay.setBackgroundResource(R.drawable.icon_22164);
-            isPlaying = false;
-        }
-
-    }
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        if(isPlaying){
+//            st.pause();
+//            btnPlay.setBackgroundResource(R.drawable.icon_22164);
+//            isPlaying = false;
+//        }
+//
+//    }
 
     @Override
     protected void onResume() {
