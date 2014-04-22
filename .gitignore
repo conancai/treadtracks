@@ -11,3 +11,6 @@
 bin/
 gen/
 .idea/
+
+## ignore since will be different for everyone
+project.properties
