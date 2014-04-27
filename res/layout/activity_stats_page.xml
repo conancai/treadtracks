@@ -25,11 +25,66 @@
         android:layout_below="@id/stat_title"
         android:background="@android:color/darker_gray" />
 
+    <GridLayout
+        android:id="@+id/titleGrid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/statsLine"
+        android:layout_gravity="center|top"
+        android:layout_marginTop="10sp"
+        android:columnCount="4"
+        android:orientation="horizontal"
+        android:rowCount="1" >
+
+        <TextView
+            android:id="@+id/date_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="0"
+            android:layout_row="0"
+            android:text="@string/date_title"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/dist_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="1"
+            android:layout_marginLeft="55dp"
+            android:layout_row="0"
+            android:text="@string/dist_title"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/time_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="2"
+            android:layout_marginLeft="55dp"
+            android:layout_row="0"
+            android:text="@string/time_title"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/pace_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="3"
+            android:layout_marginLeft="55dp"
+            android:layout_row="0"
+            android:text="@string/pace_title"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </GridLayout>
+
     <ListView
         android:id="@+id/stats_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/statsLine"
+        android:layout_below="@id/titleGrid"
         android:layout_marginTop="10dp" >
     </ListView>
 

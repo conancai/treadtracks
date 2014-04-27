@@ -32,9 +32,13 @@
 
     <color name="red">#FF0000</color>
 
-    <string name="date">Date: </string>
-    <string name="dist">Dist: </string>
-    <string name="pace">Pace: </string>
-    <string name="time">Time: </string>
+    <string name="date">Date:</string>
+    <string name="dist">Dist:</string>
+    <string name="pace">Pace:</string>
+    <string name="time">Time:</string>
+    <string name="date_title">Date</string>
+    <string name="dist_title">Dist</string>
+    <string name="pace_title">Pace</string>
+    <string name="time_title">Time</string>
 
 </resources>

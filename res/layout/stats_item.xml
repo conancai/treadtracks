@@ -7,94 +7,54 @@
     android:layout_gravity="center|top"
     android:columnCount="4"
     android:orientation="horizontal"
-    android:rowCount="2"
+    android:rowCount="1"
     tools:context=".GridXMLActivity" >
 
     <TextView
-        android:id="@+id/dateText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_column="0"
-        android:layout_marginBottom="10dp"
-        android:layout_marginLeft="45dp"
-        android:layout_row="0"
-        android:text="@string/date"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textStyle="bold" />
-
-    <TextView
         android:id="@+id/dateView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_column="1"
-        android:layout_marginLeft="10dp"
-        android:layout_row="0"
-        android:text="2/4/13"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <TextView
-        android:id="@+id/distText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="85sp"
+        android:layout_height="20sp"
         android:layout_column="0"
-        android:layout_marginBottom="10dp"
-        android:layout_marginLeft="45dp"
-        android:layout_row="1"
-        android:text="@string/dist"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textStyle="bold" />
+        android:layout_marginBottom="30sp"
+        android:layout_marginTop="30sp"
+        android:layout_row="0"
+        android:text="02/04/13"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
         android:id="@+id/distView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="60sp"
+        android:layout_height="20sp"
         android:layout_column="1"
-        android:layout_marginLeft="10dp"
-        android:layout_row="1"
-        android:text="3 Mi."
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <TextView
-        android:id="@+id/paceText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_column="2"
-        android:layout_marginBottom="10dp"
-        android:layout_marginLeft="20dp"
+        android:layout_marginBottom="30sp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="30sp"
         android:layout_row="0"
-        android:text="@string/pace"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/paceView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_column="3"
-        android:layout_marginLeft="10dp"
-        android:layout_row="0"
-        android:text="10:04 Mi."
+        android:text="23 Mi."
         android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <TextView
-        android:id="@+id/timeText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_column="2"
-        android:layout_marginLeft="20dp"
-        android:layout_row="1"
-        android:text="@string/time"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/timeView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="60sp"
+        android:layout_height="20sp"
+        android:layout_column="2"
+        android:layout_marginBottom="30sp"
+        android:layout_marginLeft="25dp"
+        android:layout_marginTop="30sp"
+        android:layout_row="0"
+        android:text="04:30"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/paceView"
+        android:layout_width="85sp"
+        android:layout_height="20sp"
         android:layout_column="3"
-        android:layout_marginLeft="10dp"
-        android:layout_row="1"
-        android:text="30 Minutes"
+        android:layout_marginBottom="30sp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="30sp"
+        android:layout_row="0"
+        android:text="10:04"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
 </GridLayout>

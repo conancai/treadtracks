@@ -1,5 +1,9 @@
 package com.example.treadtracksproto;
 
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -22,10 +26,7 @@ public class StatsPage extends Activity {
 
 	private ParseQueryAdapter.QueryFactory<StatsPost> factory;
 	private ParseQueryAdapter<StatsPost> posts;
-
-	private void doListQuery() {
-		posts.loadObjects();
-	}
+	private ListView postsView;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +43,7 @@ public class StatsPage extends Activity {
 		};
 
 		posts = new ParseQueryAdapter<StatsPost>(this, factory) {
+
 			@Override
 			public View getItemView(StatsPost post, View view, ViewGroup parent) {
 				if (view == null) {
@@ -54,6 +56,9 @@ public class StatsPage extends Activity {
 						.findViewById(R.id.distView);
 				TextView paceView = (TextView) view.findViewById(R.id.paceView);
 				TextView timeView = (TextView) view.findViewById(R.id.timeView);
+				Format formatter = new SimpleDateFormat("MM-dd-yy");
+				Date date = post.getCreatedAt();
+				post.setDate(formatter.format(date));
 				dateView.setText(post.getDate());
 				distanceView.setText(post.getDistance());
 				paceView.setText(post.getPace());
@@ -64,24 +69,24 @@ public class StatsPage extends Activity {
 
 		posts.setAutoload(false);
 
-		ListView postsView = (ListView) this.findViewById(R.id.stats_view);
+		postsView = (ListView) this.findViewById(R.id.stats_view);
+		postsView.setDividerHeight(10);
 		postsView.setAdapter(posts);
 
 		AlertDialog.Builder alert = new AlertDialog.Builder(StatsPage.this);
 		alert.setTitle("Enter Distance Ran In Miles");
 		final EditText input = new EditText(StatsPage.this);
-		input.setInputType(InputType.TYPE_CLASS_TEXT
-				| InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+		input.setInputType(InputType.TYPE_CLASS_NUMBER
+				| InputType.TYPE_NUMBER_FLAG_DECIMAL);
 		alert.setView(input);
 		// Handle the dialog input
 		alert.setPositiveButton("Done", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				// Create a post.
 				StatsPost post = new StatsPost();
-				post.setDate("2-4-14");
 				post.setDistance(input.getText().toString());
-				post.setPace("10:05 Mi.");
-				post.setTime("30 Minutes");
+				post.setPace("10:05");
+				post.setTime("0:30");
 				ParseACL acl = new ParseACL();
 				// Give public read access
 				acl.setPublicReadAccess(true);
@@ -91,7 +96,7 @@ public class StatsPage extends Activity {
 					@Override
 					public void done(ParseException e) {
 						// Update the list view
-						doListQuery();
+						posts.loadObjects();
 					}
 				});
 			}
@@ -108,7 +113,7 @@ public class StatsPage extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		doListQuery();
+		posts.loadObjects();
 	}
 
 	/*
