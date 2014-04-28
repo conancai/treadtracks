@@ -40,5 +40,7 @@
     <string name="dist_title">Dist</string>
     <string name="pace_title">Pace</string>
     <string name="time_title">Time</string>
+    <string name="dist_unit">(Mi)</string>
+    <string name="pace_unit">(Min/Mi)</string>
 
 </resources>

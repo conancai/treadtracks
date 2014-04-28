@@ -1,6 +1,8 @@
 package com.example.treadtracksproto;
 
+import java.text.DecimalFormat;
 import java.text.Format;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -56,13 +58,11 @@ public class StatsPage extends Activity {
 						.findViewById(R.id.distView);
 				TextView paceView = (TextView) view.findViewById(R.id.paceView);
 				TextView timeView = (TextView) view.findViewById(R.id.timeView);
-				Format formatter = new SimpleDateFormat("MM-dd-yy");
-				Date date = post.getCreatedAt();
-				post.setDate(formatter.format(date));
+
 				dateView.setText(post.getDate());
+				timeView.setText(post.getTime());
 				distanceView.setText(post.getDistance());
 				paceView.setText(post.getPace());
-				timeView.setText(post.getTime());
 				return view;
 			}
 		};
@@ -84,9 +84,16 @@ public class StatsPage extends Activity {
 			public void onClick(DialogInterface dialog, int which) {
 				// Create a post.
 				StatsPost post = new StatsPost();
+
+				Format sdf = new SimpleDateFormat("MM-dd-yy");
+				String date = sdf.format(new Date());
+				post.setDate(date);
+
 				post.setDistance(input.getText().toString());
 				post.setPace("10:05");
-				post.setTime("0:30");
+
+				String time = timeFormat();
+				post.setTime(time);
 				ParseACL acl = new ParseACL();
 				// Give public read access
 				acl.setPublicReadAccess(true);
@@ -108,6 +115,22 @@ public class StatsPage extends Activity {
 					}
 				});
 		alert.create().show();
+	}
+
+	private String timeFormat() {
+		NumberFormat df = new DecimalFormat("00");
+		long millis = getIntent().getLongExtra("runDuration", 0);
+		int seconds = (int) (millis / 1000);
+		seconds = (int) Math.floor(seconds);
+		int minutes = seconds / 60;
+		minutes = (int) Math.floor(minutes);
+		int hours = minutes / 60;
+		hours = (int) Math.floor(hours);
+		seconds = seconds % 60;
+		minutes = minutes % 60;
+		String time = df.format(hours) + ":" + df.format(minutes) + ":"
+				+ df.format(seconds);
+		return time;
 	}
 
 	@Override
