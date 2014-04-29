@@ -30,6 +30,13 @@ public class StatsPage extends Activity {
 	private ParseQueryAdapter<StatsPost> posts;
 	private ListView postsView;
 
+	private long millis;
+	private int seconds;
+	private int minutes;
+	private int hours;
+
+	private NumberFormat df = new DecimalFormat("00");
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -89,11 +96,16 @@ public class StatsPage extends Activity {
 				String date = sdf.format(new Date());
 				post.setDate(date);
 
-				post.setDistance(input.getText().toString());
-				post.setPace("10:05");
+				String dist = input.getText().toString();
+				post.setDistance(dist);
 
 				String time = timeFormat();
 				post.setTime(time);
+
+				int distNum = Integer.parseInt(dist);
+				String pace = paceFormat(distNum);
+				post.setPace(pace);
+
 				ParseACL acl = new ParseACL();
 				// Give public read access
 				acl.setPublicReadAccess(true);
@@ -117,19 +129,30 @@ public class StatsPage extends Activity {
 		alert.create().show();
 	}
 
+	private String paceFormat(int dist) {
+		int paceNum = (int) Math.floor(seconds / dist);
+
+		int paceSeconds = (int) Math.floor(paceNum);
+		int paceMinutes = paceSeconds / 60;
+		paceMinutes = (int) Math.floor(paceMinutes);
+		paceSeconds = paceSeconds % 60;
+		paceMinutes = paceMinutes % 60;
+		String pace = df.format(paceMinutes) + ":" + df.format(paceSeconds);
+		return pace;
+	}
+
 	private String timeFormat() {
-		NumberFormat df = new DecimalFormat("00");
-		long millis = getIntent().getLongExtra("runDuration", 0);
-		int seconds = (int) (millis / 1000);
+		millis = getIntent().getLongExtra("runDuration", 0);
+		seconds = (int) (millis / 1000);
 		seconds = (int) Math.floor(seconds);
-		int minutes = seconds / 60;
+		minutes = seconds / 60;
 		minutes = (int) Math.floor(minutes);
-		int hours = minutes / 60;
+		hours = minutes / 60;
 		hours = (int) Math.floor(hours);
-		seconds = seconds % 60;
-		minutes = minutes % 60;
-		String time = df.format(hours) + ":" + df.format(minutes) + ":"
-				+ df.format(seconds);
+		int roundedSeconds = seconds % 60;
+		int roundedMinutes = minutes % 60;
+		String time = df.format(hours) + ":" + df.format(roundedMinutes) + ":"
+				+ df.format(roundedSeconds);
 		return time;
 	}
 
