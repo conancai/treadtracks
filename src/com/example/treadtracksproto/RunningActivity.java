@@ -20,6 +20,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.smp.soundtouchandroid.SoundTouchPlayable;
@@ -38,9 +39,10 @@ public class RunningActivity extends Activity {
 	private ImageButton btnPlay;
 	private ImageButton btnNext;
 	private ImageButton btnPrevious;
-	private ImageButton bpmUp;
-	private ImageButton bpmDown;
-	private TextView bpmDisplay;
+	//private ImageButton bpmUp;
+	//private ImageButton bpmDown;
+	//private TextView bpmDisplay;
+	private SeekBar tempoSeekBar;
 	private TextView songName;
 	private TextView artistName;
 	private ImageView albumArt;
@@ -74,9 +76,10 @@ public class RunningActivity extends Activity {
 		btnPlay = (ImageButton) findViewById(R.id.play);
 		btnNext = (ImageButton) findViewById(R.id.next_song);
 		btnPrevious = (ImageButton) findViewById(R.id.previous_song);
-		bpmUp = (ImageButton) findViewById(R.id.bpm_up);
-		bpmDown = (ImageButton) findViewById(R.id.bpm_down);
-		bpmDisplay = (TextView) findViewById(R.id.bpm_num);
+		//bpmUp = (ImageButton) findViewById(R.id.bpm_up);
+		//bpmDown = (ImageButton) findViewById(R.id.bpm_down);
+		//bpmDisplay = (TextView) findViewById(R.id.bpm_num);
+		tempoSeekBar = (SeekBar) findViewById(R.id.tempoSeekBar);
 		songName = (TextView) findViewById(R.id.textView3);
 		artistName = (TextView) findViewById(R.id.textView2);
 		albumArt = (ImageView) findViewById(R.id.album_art);
@@ -223,7 +226,8 @@ public class RunningActivity extends Activity {
 				}
 			}
 		});
-
+		
+		/*
 		bpmDown.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
@@ -256,6 +260,27 @@ public class RunningActivity extends Activity {
 				}
 				if (st != null) {
 					st.setTempo(bpm / 100f);
+				}
+			}
+		});
+		*/
+		tempoSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			
+			@Override
+			public void onStopTrackingTouch(SeekBar arg0) { }
+			
+			@Override
+			public void onStartTrackingTouch(SeekBar arg0) { }
+			
+			@Override
+			public void onProgressChanged(SeekBar bar, int value, boolean unused) {
+				// Sets the tempo based on the seek bar value
+				// Seek bar goes from 0 to 100, so we need to adjust value
+				// Current range: 50 to 150
+				float tempo = (value + 50);
+				if (st != null) {
+					// Want the value to range from .5 to 1.5
+					st.setTempo(tempo / 100f);
 				}
 			}
 		});
