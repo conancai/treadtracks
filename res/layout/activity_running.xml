@@ -31,24 +31,24 @@
         android:contentDescription="@string/gray_background" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/artist"
         android:layout_width="400sp"
         android:layout_height="25dp"
-        android:layout_below="@+id/textView3"
+        android:layout_below="@+id/song_title"
         android:layout_marginTop="5dp"
         android:gravity="center"
         android:textColor="#303030"
         android:textSize="18sp" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/song_title"
         android:layout_width="400sp"
         android:layout_height="25sp"
         android:layout_alignParentTop="true"
         android:gravity="center"
         android:textColor="#303030"
         android:textSize="20sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"/>
 
     <ImageView
         android:id="@+id/album_art"

@@ -1,9 +1,13 @@
 package com.example.treadtracksproto;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
+import java.util.concurrent.*;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -15,18 +19,27 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.SeekBar;
-import android.widget.TextView;
+import android.widget.*;
 
 import com.smp.soundtouchandroid.SoundTouchPlayable;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class RunningActivity extends Activity {
+    private String API_KEY = "0SU5PIXAMC7BHFFLK";
+    private String TAG = "treadtracks";
 
 	// start/stop run variables
 	private Button startRun;
@@ -60,7 +73,8 @@ public class RunningActivity extends Activity {
 	private Stack<Integer> prevSongs = new Stack<Integer>();
 	private Stack<Integer> nextSongs = new Stack<Integer>();
 	private int bpm = 100;
-	// private ArrayList<HashMap<String, String>> songList = new
+    ExecutorService networkService = Executors.newSingleThreadExecutor();
+    // private ArrayList<HashMap<String, String>> songList = new
 	// ArrayList<HashMap<String, String>>();
 	// private ArrayList<String> songList = new ArrayList<String>();
 
@@ -84,8 +98,8 @@ public class RunningActivity extends Activity {
 		//bpmDown = (ImageButton) findViewById(R.id.bpm_down);
 		//bpmDisplay = (TextView) findViewById(R.id.bpm_num);
 		tempoSeekBar = (SeekBar) findViewById(R.id.tempoSeekBar);
-		songName = (TextView) findViewById(R.id.textView3);
-		artistName = (TextView) findViewById(R.id.textView2);
+		songName = (TextView) findViewById(R.id.song_title);
+		artistName = (TextView) findViewById(R.id.artist);
 		albumArt = (ImageView) findViewById(R.id.album_art);
 
 		// mediaPlayer = new MediaPlayer();
@@ -407,6 +421,7 @@ public class RunningActivity extends Activity {
 			btnPlay.setBackgroundResource(R.drawable.icon_22165);
 			st.play();
 			isPlaying = true;
+            Toast.makeText(this,"BPM:"+getBPM(item.getTitle(),item.getArtist()),Toast.LENGTH_SHORT).show();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -584,4 +599,62 @@ public class RunningActivity extends Activity {
 		artistName.setText(item.getArtist());
 		albumArt.setImageBitmap(item.getAlbumArt());
 	}
+
+    private JSONObject getJSON(String URL) throws JSONException{
+        final StringBuilder builder = new StringBuilder();
+        final HttpClient client = new DefaultHttpClient();
+        final HttpGet httpGet = new HttpGet(URL);
+        Future<String> data = networkService.submit(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                try {
+                    HttpResponse response = client.execute(httpGet);
+                    HttpEntity entity = response.getEntity();
+                    InputStream content = entity.getContent();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(content));
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        builder.append(line);
+                    }
+                    return builder.toString();
+                } catch (ClientProtocolException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return "";
+            }
+        });
+        try{
+            return new JSONObject(data.get());
+        } catch (InterruptedException e){
+            e.printStackTrace();
+        } catch (ExecutionException e){
+            e.printStackTrace();
+        }
+        return new JSONObject("");
+    }
+
+    private int getBPM(String song, String artist){
+        String base = "http://developer.echonest.com/api/v4/song/";
+        String url1 = base+"search?api_key="+API_KEY+"&artist="+artist.replaceAll("&", "%20").replaceAll(" ", "%20")+"&title="+song.replaceAll("&", "%20").replaceAll(" ", "%20");
+        try {
+            JSONArray songsArray1 = getJSON(url1).getJSONObject("response").getJSONArray("songs");
+            if(songsArray1.length() > 0){
+                String songID = songsArray1.getJSONObject(0).getString("id");
+                String url2 = base+"profile?api_key="+API_KEY+"&id="+songID+"&bucket=audio_summary";
+                JSONArray songsArray2 = getJSON(url2).getJSONObject("response").getJSONArray("songs");
+                if(songsArray2.length() > 0){
+                    String tempo = songsArray2.getJSONObject(0).getJSONObject("audio_summary").getString("tempo");
+                    return Math.round(Float.parseFloat(tempo));
+                }
+            } else {
+                return -1;
+            }
+        return -1;
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+        return -1;
+    }
 }
