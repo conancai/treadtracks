@@ -6,12 +6,15 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -35,12 +38,17 @@ public class StatsPage extends Activity {
 	private int minutes;
 	private int hours;
 
+	private AlertDialog dialog;
+
 	private NumberFormat df = new DecimalFormat("00");
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_stats_page);
+
+		getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+		getActionBar().setCustomView(R.layout.actionbar);
 
 		factory = new ParseQueryAdapter.QueryFactory<StatsPost>() {
 			public ParseQuery<StatsPost> create() {
@@ -157,6 +165,29 @@ public class StatsPage extends Activity {
 	}
 
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.running, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.action_previous_runs:
+			startActivity(new Intent(this, StatsPage.class));
+			break;
+
+		case R.id.action_songs:
+			// show dialog menu
+			dialog.show();
+			break;
+		}
+
+		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
 	protected void onResume() {
 		super.onResume();
 		posts.loadObjects();
@@ -177,14 +208,6 @@ public class StatsPage extends Activity {
 	@Override
 	public void onStart() {
 		super.onStart();
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		// getMenuInflater().inflate(R.menu.stats_page, menu);
-		// No menu on non-main pages yet
-		return true;
 	}
 
 }
