@@ -121,7 +121,7 @@ public class StatsPage extends Activity {
 				post.setTime(time);
 
 				// set pace
-				int distNum = Integer.parseInt(dist);
+				double distNum = Double.parseDouble(dist);
 				String pace = paceFormat(distNum);
 				post.setPace(pace);
 
@@ -177,7 +177,7 @@ public class StatsPage extends Activity {
 	}
 
 	// calculate minutes per mile based off of total time and distance
-	private String paceFormat(int dist) {
+	private String paceFormat(double dist) {
 		int paceNum = (int) Math.floor(seconds / dist);
 
 		int paceSeconds = (int) Math.floor(paceNum);
