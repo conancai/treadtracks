@@ -12,7 +12,9 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -40,7 +42,10 @@ public class StatsPage extends Activity {
 
 	private AlertDialog dialog;
 
+	// used to get double digit format for numbers
 	private NumberFormat df = new DecimalFormat("00");
+
+	private AlertDialog.Builder alert;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +55,7 @@ public class StatsPage extends Activity {
 		getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 		getActionBar().setCustomView(R.layout.actionbar);
 
+		// query Parse to get all past run information, order by most recent
 		factory = new ParseQueryAdapter.QueryFactory<StatsPost>() {
 			public ParseQuery<StatsPost> create() {
 				ParseQuery<StatsPost> query = StatsPost.getQuery();
@@ -59,8 +65,8 @@ public class StatsPage extends Activity {
 			}
 		};
 
+		// describes how to populate item in listview based on query
 		posts = new ParseQueryAdapter<StatsPost>(this, factory) {
-
 			@Override
 			public View getItemView(StatsPost post, View view, ViewGroup parent) {
 				if (view == null) {
@@ -88,7 +94,8 @@ public class StatsPage extends Activity {
 		postsView.setDividerHeight(10);
 		postsView.setAdapter(posts);
 
-		AlertDialog.Builder alert = new AlertDialog.Builder(StatsPage.this);
+		// alert for entering distance ran
+		alert = new AlertDialog.Builder(StatsPage.this);
 		alert.setTitle("Enter Distance Ran In Miles");
 		final EditText input = new EditText(StatsPage.this);
 		input.setInputType(InputType.TYPE_CLASS_NUMBER
@@ -100,16 +107,20 @@ public class StatsPage extends Activity {
 				// Create a post.
 				StatsPost post = new StatsPost();
 
+				// set date
 				Format sdf = new SimpleDateFormat("MM-dd-yy");
 				String date = sdf.format(new Date());
 				post.setDate(date);
 
+				// set dist
 				String dist = input.getText().toString();
 				post.setDistance(dist);
 
+				// set time
 				String time = timeFormat();
 				post.setTime(time);
 
+				// set pace
 				int distNum = Integer.parseInt(dist);
 				String pace = paceFormat(distNum);
 				post.setPace(pace);
@@ -134,9 +145,38 @@ public class StatsPage extends Activity {
 						// Do nothing.
 					}
 				});
-		alert.create().show();
+
+		dialog = alert.create();
+		// input field looks for text entered
+		input.addTextChangedListener(new TextWatcher() {
+			// needed to make TextWatcher happy
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
+			}
+
+			// needed to make TextWatcher happy
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
+			}
+
+			// enables Done button if text has been entered
+			@Override
+			public void afterTextChanged(Editable s) {
+				if (s.length() < 1) {
+					dialog.getButton(dialog.BUTTON_POSITIVE).setEnabled(false);
+				} else {
+					dialog.getButton(dialog.BUTTON_POSITIVE).setEnabled(true);
+				}
+			}
+		});
+		dialog.show();
+		// disables the done button by default
+		dialog.getButton(dialog.BUTTON_POSITIVE).setEnabled(false);
 	}
 
+	// calculate minutes per mile based off of total time and distance
 	private String paceFormat(int dist) {
 		int paceNum = (int) Math.floor(seconds / dist);
 
@@ -149,6 +189,7 @@ public class StatsPage extends Activity {
 		return pace;
 	}
 
+	// calculate total time based off of total seconds
 	private String timeFormat() {
 		millis = getIntent().getLongExtra("runDuration", 0);
 		seconds = (int) (millis / 1000);
