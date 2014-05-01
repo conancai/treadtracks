@@ -13,6 +13,7 @@
     <string name="title_activity_calibration_page">CalibrationPage</string>
     <string name="title_activity_running">RunningActivity</string>
     <string name="action_songs">Songs</string>
+    <string name="action_player">Player</string>
 
     <!-- activity player page strings -->
     <string name="song_name">Song Name</string>

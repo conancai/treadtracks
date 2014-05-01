@@ -167,20 +167,15 @@ public class StatsPage extends Activity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.running, menu);
+		getMenuInflater().inflate(R.menu.stats_page, menu);
 		return true;
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case R.id.action_previous_runs:
-			startActivity(new Intent(this, StatsPage.class));
-			break;
-
-		case R.id.action_songs:
-			// show dialog menu
-			dialog.show();
+		case R.id.action_player:
+			startActivity(new Intent(this, RunningActivity.class));
 			break;
 		}
 
