@@ -77,7 +77,6 @@
         android:layout_alignBottom="@+id/album_art"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="114dp"
-        android:alpha=".8"
         android:background="@drawable/rounded_button"
         android:text="@string/start_run"
         android:textColor="#FFFFFF"
