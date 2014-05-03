@@ -26,6 +26,7 @@ import android.view.View;
 import android.widget.*;
 
 import com.smp.soundtouchandroid.SoundTouchPlayable;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -74,6 +75,10 @@ public class RunningActivity extends Activity {
 	private Stack<Integer> nextSongs = new Stack<Integer>();
 	private int bpm = 100;
     ExecutorService networkService = Executors.newSingleThreadExecutor();
+    
+    private String playlistID = null;
+    private String songPosition = null;
+	
     // private ArrayList<HashMap<String, String>> songList = new
 	// ArrayList<HashMap<String, String>>();
 	// private ArrayList<String> songList = new ArrayList<String>();
@@ -112,34 +117,71 @@ public class RunningActivity extends Activity {
 		calibrationIntent = new Intent(this, CalibrationPage.class);
 		statsPageIntent = new Intent(this, StatsPage.class);
 
-		// Query the MediaStore for all music files
-		String[] projection = { MediaStore.Audio.Media.TITLE,
-				MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.DATA,
-				MediaStore.Audio.Media.ALBUM_ID };
-		String selection = MediaStore.Audio.Media.IS_MUSIC + "!=0";
-		String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
-		Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-		ContentResolver cr = this.getContentResolver();
-		cursor = cr.query(uri, projection, selection, null, sortOrder);
-		cursor.moveToFirst();
-
+		Intent intent = getIntent();
+		
+		//if (intent != null && intent.getData() != null) {
+			
+			playlistID = intent.getStringExtra("playlistID");
+			songPosition = intent.getStringExtra("songPosition");
+			Log.d("TAG", "recieving playlistID: " + playlistID + " songPosition: " + songPosition);
+		//}
+		
 		ArrayList<SongItem> songData = new ArrayList<SongItem>();
-		for (int i = 0; i < cursor.getCount(); i++) {
-			songData.add(new SongItem(this, cursor.getString(cursor
-					.getColumnIndex(MediaStore.Audio.Media.TITLE)), cursor
-					.getString(cursor
-							.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
-					cursor.getString(cursor
-							.getColumnIndex(MediaStore.Audio.Media.DATA)),
-					cursor.getString(cursor
-							.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))));
-			cursor.moveToNext();
+		String selection = MediaStore.Audio.Media.IS_MUSIC + "!=0";
+		ContentResolver cr = this.getContentResolver();
+		if (playlistID == null || playlistID.equals("all")) { 
+			// Query the MediaStore for all music files
+			String[] projection = { MediaStore.Audio.Media.TITLE,
+					MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.DATA,
+					MediaStore.Audio.Media.ALBUM_ID };
+			String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+			Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+			cursor = cr.query(uri, projection, selection, null, sortOrder);
+			cursor.moveToFirst();
+	
+			for (int i = 0; i < cursor.getCount(); i++) {
+				songData.add(new SongItem(this, cursor.getString(cursor
+						.getColumnIndex(MediaStore.Audio.Media.TITLE)), cursor
+						.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Media.DATA)),
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))));
+				cursor.moveToNext();
+			}
+			cursor.close();
+		} else {
+			String[] projection = { MediaStore.Audio.Playlists.Members.TITLE,
+					MediaStore.Audio.Playlists.Members.ARTIST, MediaStore.Audio.Playlists.Members.DATA,
+					MediaStore.Audio.Playlists.Members.ALBUM_ID };
+			Long id = Long.parseLong(playlistID);
+			Uri uri = MediaStore.Audio.Playlists.Members.getContentUri("external", id);
+			cursor = cr.query(uri, projection, selection, null, null);
+			cursor.moveToFirst();
+			
+			
+			for (int i = 0; i < cursor.getCount(); i++) {
+				songData.add(new SongItem(this, cursor.getString(cursor
+						.getColumnIndex(MediaStore.Audio.Playlists.Members.TITLE)), cursor
+						.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Playlists.Members.ARTIST)),
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Playlists.Members.DATA)),
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Playlists.Members.ALBUM_ID))));
+				cursor.moveToNext();
+			}
+			cursor.close();
 		}
-		cursor.close();
 
 		adapter = new SongAdapter(this, R.layout.song_row_item,
 				songData.toArray(new SongItem[0]));
-		currentSongIndex = pickRandomSong();
+		if (songPosition == null) {
+			currentSongIndex = pickRandomSong();
+		} else {
+			currentSongIndex = Integer.parseInt(songPosition);
+		}
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle(R.string.dialog_title);
 
@@ -500,6 +542,10 @@ public class RunningActivity extends Activity {
 		case R.id.action_songs:
 			// show dialog menu
 			dialog.show();
+			break;
+		
+		case R.id.action_playlists:
+			startActivity(new Intent(this, PlaylistActivity.class));
 			break;
 		}
 

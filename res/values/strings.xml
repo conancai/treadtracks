@@ -13,6 +13,7 @@
     <string name="title_activity_calibration_page">CalibrationPage</string>
     <string name="title_activity_running">RunningActivity</string>
     <string name="action_songs">Songs</string>
+    <string name="action_playlists">Playlists</string>
     <string name="action_player">Player</string>
 
     <!-- activity player page strings -->
@@ -44,5 +45,8 @@
     <string name="time_title">Time</string>
     <string name="dist_unit">(Mi)</string>
     <string name="pace_unit">(Min/Mi)</string>
+    <string name="title_activity_playlist">PlaylistActivity</string>
+    <string name="title_activity_songlist_actiity">SonglistActiity</string>
+    <string name="title_activity_songlist">SonglistActivity</string>
 
 </resources>
