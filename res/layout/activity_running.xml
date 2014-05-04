@@ -81,6 +81,7 @@
         android:text="@string/start_run"
         android:textColor="#DDFFFFFF"
         android:textSize="30sp" />
+<<<<<<< HEAD
 
     <ImageView
         android:id="@+id/turtle"
@@ -90,6 +91,7 @@
         android:layout_alignLeft="@+id/album_art"
         android:background="@drawable/turtle"
         android:contentDescription="@string/gray_background" />
+
 
     <SeekBar
         android:id="@+id/tempoSeekBar"
@@ -101,6 +103,7 @@
         android:max="100"
         android:progress="50" />
 
+<<<<<<< HEAD
     <ImageView
         android:id="@+id/hare"
         android:layout_width="30dp"
@@ -110,4 +113,6 @@
         android:background="@drawable/hare"
         android:contentDescription="@string/gray_background" />
 
+=======
+>>>>>>> b147c1556ea3fb1bad80c5cc9af3795e40da863f
 </RelativeLayout>
