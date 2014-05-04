@@ -6,6 +6,16 @@
         android:showAsAction="never"
         android:title="@string/action_player"/>
     <item
+        android:id="@+id/action_playlists"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/action_playlists"/>
+    <item
+        android:id="@+id/action_songs"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/action_songs"/>
+    <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:showAsAction="never"

@@ -112,6 +112,10 @@ public class PlaylistActivity extends ListActivity {
 		case R.id.action_previous_runs:
 			startActivity(new Intent(this, StatsPage.class));
 			break;
+
+		case R.id.action_player:
+			startActivity(new Intent(this, RunningActivity.class));
+			break;
 		/*
 		 * case R.id.action_songs: // show dialog menu dialog.show(); break;
 		 */
