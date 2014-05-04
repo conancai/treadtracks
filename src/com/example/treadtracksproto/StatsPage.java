@@ -218,6 +218,9 @@ public class StatsPage extends Activity {
 		case R.id.action_player:
 			startActivity(new Intent(this, RunningActivity.class));
 			break;
+		case R.id.action_playlists:
+			startActivity(new Intent(this, PlaylistActivity.class));
+			break;
 		}
 
 		return super.onOptionsItemSelected(item);
