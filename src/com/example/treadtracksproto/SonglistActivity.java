@@ -148,8 +148,6 @@ public class SonglistActivity extends ListActivity {
 		case R.id.action_player:
 			startActivity(new Intent(this, RunningActivity.class));
 			break;
-		case R.id.action_settings:
-			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
