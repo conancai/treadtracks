@@ -7,7 +7,21 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -23,24 +37,18 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.*;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.smp.soundtouchandroid.SoundTouchPlayable;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 public class RunningActivity extends Activity {
-    private String API_KEY = "0SU5PIXAMC7BHFFLK";
-    private String TAG = "treadtracks";
+	private String API_KEY = "0SU5PIXAMC7BHFFLK";
+	private String TAG = "treadtracks";
 
 	// start/stop run variables
 	private Button startRun;
@@ -54,9 +62,9 @@ public class RunningActivity extends Activity {
 	private ImageButton btnPlay;
 	private ImageButton btnNext;
 	private ImageButton btnPrevious;
-	//private ImageButton bpmUp;
-	//private ImageButton bpmDown;
-	//private TextView bpmDisplay;
+	// private ImageButton bpmUp;
+	// private ImageButton bpmDown;
+	// private TextView bpmDisplay;
 	private SeekBar tempoSeekBar;
 	private TextView songName;
 	private TextView artistName;
@@ -74,12 +82,12 @@ public class RunningActivity extends Activity {
 	private Stack<Integer> prevSongs = new Stack<Integer>();
 	private Stack<Integer> nextSongs = new Stack<Integer>();
 	private int bpm = 100;
-    ExecutorService networkService = Executors.newSingleThreadExecutor();
-    
-    private String playlistID = null;
-    private String songPosition = null;
-	
-    // private ArrayList<HashMap<String, String>> songList = new
+	ExecutorService networkService = Executors.newSingleThreadExecutor();
+
+	private String playlistID = null;
+	private String songPosition = null;
+
+	// private ArrayList<HashMap<String, String>> songList = new
 	// ArrayList<HashMap<String, String>>();
 	// private ArrayList<String> songList = new ArrayList<String>();
 
@@ -99,9 +107,9 @@ public class RunningActivity extends Activity {
 		btnPlay = (ImageButton) findViewById(R.id.play);
 		btnNext = (ImageButton) findViewById(R.id.next_song);
 		btnPrevious = (ImageButton) findViewById(R.id.previous_song);
-		//bpmUp = (ImageButton) findViewById(R.id.bpm_up);
-		//bpmDown = (ImageButton) findViewById(R.id.bpm_down);
-		//bpmDisplay = (TextView) findViewById(R.id.bpm_num);
+		// bpmUp = (ImageButton) findViewById(R.id.bpm_up);
+		// bpmDown = (ImageButton) findViewById(R.id.bpm_down);
+		// bpmDisplay = (TextView) findViewById(R.id.bpm_num);
 		tempoSeekBar = (SeekBar) findViewById(R.id.tempoSeekBar);
 		songName = (TextView) findViewById(R.id.song_title);
 		artistName = (TextView) findViewById(R.id.artist);
@@ -118,18 +126,19 @@ public class RunningActivity extends Activity {
 		statsPageIntent = new Intent(this, StatsPage.class);
 
 		Intent intent = getIntent();
-		
-		//if (intent != null && intent.getData() != null) {
-			
-			playlistID = intent.getStringExtra("playlistID");
-			songPosition = intent.getStringExtra("songPosition");
-			Log.d("TAG", "recieving playlistID: " + playlistID + " songPosition: " + songPosition);
-		//}
-		
+
+		// if (intent != null && intent.getData() != null) {
+
+		playlistID = intent.getStringExtra("playlistID");
+		songPosition = intent.getStringExtra("songPosition");
+		Log.d("TAG", "recieving playlistID: " + playlistID + " songPosition: "
+				+ songPosition);
+		// }
+
 		ArrayList<SongItem> songData = new ArrayList<SongItem>();
 		String selection = MediaStore.Audio.Media.IS_MUSIC + "!=0";
 		ContentResolver cr = this.getContentResolver();
-		if (playlistID == null || playlistID.equals("all")) { 
+		if (playlistID == null || playlistID.equals("all")) {
 			// Query the MediaStore for all music files
 			String[] projection = { MediaStore.Audio.Media.TITLE,
 					MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.DATA,
@@ -138,11 +147,13 @@ public class RunningActivity extends Activity {
 			Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
 			cursor = cr.query(uri, projection, selection, null, sortOrder);
 			cursor.moveToFirst();
-	
+
 			for (int i = 0; i < cursor.getCount(); i++) {
-				songData.add(new SongItem(this, cursor.getString(cursor
-						.getColumnIndex(MediaStore.Audio.Media.TITLE)), cursor
-						.getString(cursor
+				songData.add(new SongItem(
+						this,
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+						cursor.getString(cursor
 								.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
 						cursor.getString(cursor
 								.getColumnIndex(MediaStore.Audio.Media.DATA)),
@@ -153,18 +164,21 @@ public class RunningActivity extends Activity {
 			cursor.close();
 		} else {
 			String[] projection = { MediaStore.Audio.Playlists.Members.TITLE,
-					MediaStore.Audio.Playlists.Members.ARTIST, MediaStore.Audio.Playlists.Members.DATA,
+					MediaStore.Audio.Playlists.Members.ARTIST,
+					MediaStore.Audio.Playlists.Members.DATA,
 					MediaStore.Audio.Playlists.Members.ALBUM_ID };
 			Long id = Long.parseLong(playlistID);
-			Uri uri = MediaStore.Audio.Playlists.Members.getContentUri("external", id);
+			Uri uri = MediaStore.Audio.Playlists.Members.getContentUri(
+					"external", id);
 			cursor = cr.query(uri, projection, selection, null, null);
 			cursor.moveToFirst();
-			
-			
+
 			for (int i = 0; i < cursor.getCount(); i++) {
-				songData.add(new SongItem(this, cursor.getString(cursor
-						.getColumnIndex(MediaStore.Audio.Playlists.Members.TITLE)), cursor
-						.getString(cursor
+				songData.add(new SongItem(
+						this,
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Playlists.Members.TITLE)),
+						cursor.getString(cursor
 								.getColumnIndex(MediaStore.Audio.Playlists.Members.ARTIST)),
 						cursor.getString(cursor
 								.getColumnIndex(MediaStore.Audio.Playlists.Members.DATA)),
@@ -275,75 +289,54 @@ public class RunningActivity extends Activity {
 					isPlaying = false;
 					endTime = System.currentTimeMillis();
 					long runDuration = endTime - startTime;
-
-					if (isFirstTimeRunning) {
-						isFirstTimeRunning = false;
-						startActivity(calibrationIntent);
-					} else {
-						statsPageIntent.putExtra("runDuration", runDuration);
-						startActivity(statsPageIntent);
-					}
+					statsPageIntent.putExtra("runDuration", runDuration);
+					startActivity(statsPageIntent);
 				}
 			}
 		});
-		
+
 		/*
-		bpmDown.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				if (bpm - 5 >= 0) {
-					bpm -= 5;
-					runOnUiThread(new Runnable() {
-						@Override
-						public void run() {
-							bpmDisplay.setText(String.valueOf(bpm - 100));
-						}
-					});
-				}
-				if (st != null) {
-					st.setTempo(bpm / 100f);
-				}
-			}
-		});
+		 * bpmDown.setOnClickListener(new View.OnClickListener() {
+		 * 
+		 * @Override public void onClick(View view) { if (bpm - 5 >= 0) { bpm -=
+		 * 5; runOnUiThread(new Runnable() {
+		 * 
+		 * @Override public void run() { bpmDisplay.setText(String.valueOf(bpm -
+		 * 100)); } }); } if (st != null) { st.setTempo(bpm / 100f); } } });
+		 * 
+		 * bpmUp.setOnClickListener(new View.OnClickListener() {
+		 * 
+		 * @Override public void onClick(View view) { if (bpm + 5 <= 200) { bpm
+		 * += 5; runOnUiThread(new Runnable() {
+		 * 
+		 * @Override public void run() { bpmDisplay.setText(String.valueOf(bpm -
+		 * 100)); } }); } if (st != null) { st.setTempo(bpm / 100f); } } });
+		 */
+		tempoSeekBar
+				.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
-		bpmUp.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				if (bpm + 5 <= 200) {
-					bpm += 5;
-					runOnUiThread(new Runnable() {
-						@Override
-						public void run() {
-							bpmDisplay.setText(String.valueOf(bpm - 100));
+					@Override
+					public void onStopTrackingTouch(SeekBar arg0) {
+					}
+
+					@Override
+					public void onStartTrackingTouch(SeekBar arg0) {
+					}
+
+					@Override
+					public void onProgressChanged(SeekBar bar, int value,
+							boolean unused) {
+						// Sets the tempo based on the seek bar value
+						// Seek bar goes from 0 to 100, so we need to adjust
+						// value
+						// Current range: 50 to 150
+						float tempo = (value + 50);
+						if (st != null) {
+							// Want the value to range from .5 to 1.5
+							st.setTempo(tempo / 100f);
 						}
-					});
-				}
-				if (st != null) {
-					st.setTempo(bpm / 100f);
-				}
-			}
-		});
-		*/
-		tempoSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-			
-			@Override
-			public void onStopTrackingTouch(SeekBar arg0) { }
-			
-			@Override
-			public void onStartTrackingTouch(SeekBar arg0) { }
-			
-			@Override
-			public void onProgressChanged(SeekBar bar, int value, boolean unused) {
-				// Sets the tempo based on the seek bar value
-				// Seek bar goes from 0 to 100, so we need to adjust value
-				// Current range: 50 to 150
-				float tempo = (value + 50);
-				if (st != null) {
-					// Want the value to range from .5 to 1.5
-					st.setTempo(tempo / 100f);
-				}
-			}
-		});
+					}
+				});
 
 		// // get mp3s
 		// File home = Environment.getExternalStorageDirectory();
@@ -463,7 +456,9 @@ public class RunningActivity extends Activity {
 			btnPlay.setBackgroundResource(R.drawable.icon_22165);
 			st.play();
 			isPlaying = true;
-            Toast.makeText(this,"BPM:"+getBPM(item.getTitle(),item.getArtist()),Toast.LENGTH_SHORT).show();
+			Toast.makeText(this,
+					"BPM:" + getBPM(item.getTitle(), item.getArtist()),
+					Toast.LENGTH_SHORT).show();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -543,7 +538,7 @@ public class RunningActivity extends Activity {
 			// show dialog menu
 			dialog.show();
 			break;
-		
+
 		case R.id.action_playlists:
 			startActivity(new Intent(this, PlaylistActivity.class));
 			break;
@@ -646,61 +641,69 @@ public class RunningActivity extends Activity {
 		albumArt.setImageBitmap(item.getAlbumArt());
 	}
 
-    private JSONObject getJSON(String URL) throws JSONException{
-        final StringBuilder builder = new StringBuilder();
-        final HttpClient client = new DefaultHttpClient();
-        final HttpGet httpGet = new HttpGet(URL);
-        Future<String> data = networkService.submit(new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                try {
-                    HttpResponse response = client.execute(httpGet);
-                    HttpEntity entity = response.getEntity();
-                    InputStream content = entity.getContent();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(content));
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        builder.append(line);
-                    }
-                    return builder.toString();
-                } catch (ClientProtocolException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return "";
-            }
-        });
-        try{
-            return new JSONObject(data.get());
-        } catch (InterruptedException e){
-            e.printStackTrace();
-        } catch (ExecutionException e){
-            e.printStackTrace();
-        }
-        return new JSONObject("");
-    }
+	private JSONObject getJSON(String URL) throws JSONException {
+		final StringBuilder builder = new StringBuilder();
+		final HttpClient client = new DefaultHttpClient();
+		final HttpGet httpGet = new HttpGet(URL);
+		Future<String> data = networkService.submit(new Callable<String>() {
+			@Override
+			public String call() throws Exception {
+				try {
+					HttpResponse response = client.execute(httpGet);
+					HttpEntity entity = response.getEntity();
+					InputStream content = entity.getContent();
+					BufferedReader reader = new BufferedReader(
+							new InputStreamReader(content));
+					String line;
+					while ((line = reader.readLine()) != null) {
+						builder.append(line);
+					}
+					return builder.toString();
+				} catch (ClientProtocolException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return "";
+			}
+		});
+		try {
+			return new JSONObject(data.get());
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+		return new JSONObject("");
+	}
 
-    private int getBPM(String song, String artist){
-        String base = "http://developer.echonest.com/api/v4/song/";
-        String url1 = base+"search?api_key="+API_KEY+"&artist="+artist.replaceAll("&", "%20").replaceAll(" ", "%20")+"&title="+song.replaceAll("&", "%20").replaceAll(" ", "%20");
-        try {
-            JSONArray songsArray1 = getJSON(url1).getJSONObject("response").getJSONArray("songs");
-            if(songsArray1.length() > 0){
-                String songID = songsArray1.getJSONObject(0).getString("id");
-                String url2 = base+"profile?api_key="+API_KEY+"&id="+songID+"&bucket=audio_summary";
-                JSONArray songsArray2 = getJSON(url2).getJSONObject("response").getJSONArray("songs");
-                if(songsArray2.length() > 0){
-                    String tempo = songsArray2.getJSONObject(0).getJSONObject("audio_summary").getString("tempo");
-                    return Math.round(Float.parseFloat(tempo));
-                }
-            } else {
-                return -1;
-            }
-        return -1;
-        } catch (JSONException e){
-            e.printStackTrace();
-        }
-        return -1;
-    }
+	private int getBPM(String song, String artist) {
+		String base = "http://developer.echonest.com/api/v4/song/";
+		String url1 = base + "search?api_key=" + API_KEY + "&artist="
+				+ artist.replaceAll("&", "%20").replaceAll(" ", "%20")
+				+ "&title="
+				+ song.replaceAll("&", "%20").replaceAll(" ", "%20");
+		try {
+			JSONArray songsArray1 = getJSON(url1).getJSONObject("response")
+					.getJSONArray("songs");
+			if (songsArray1.length() > 0) {
+				String songID = songsArray1.getJSONObject(0).getString("id");
+				String url2 = base + "profile?api_key=" + API_KEY + "&id="
+						+ songID + "&bucket=audio_summary";
+				JSONArray songsArray2 = getJSON(url2).getJSONObject("response")
+						.getJSONArray("songs");
+				if (songsArray2.length() > 0) {
+					String tempo = songsArray2.getJSONObject(0)
+							.getJSONObject("audio_summary").getString("tempo");
+					return Math.round(Float.parseFloat(tempo));
+				}
+			} else {
+				return -1;
+			}
+			return -1;
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		return -1;
+	}
 }
