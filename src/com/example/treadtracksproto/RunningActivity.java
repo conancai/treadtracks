@@ -1,39 +1,22 @@
 package com.example.treadtracksproto;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.hardware.SensorManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -45,7 +28,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import be.hogent.tarsos.dsp.AudioEvent;
 import be.hogent.tarsos.dsp.onsets.OnsetHandler;
 import be.hogent.tarsos.dsp.onsets.PercussionOnsetDetector;
@@ -54,9 +36,7 @@ import com.smp.soundtouchandroid.SoundTouchPlayable;
 
 public class RunningActivity extends Activity implements
 		AudioProc.OnAudioEventListener, OnsetHandler {
-	private String API_KEY = "0SU5PIXAMC7BHFFLK";
 	private String TAG = "treadtracks";
-	private Context context = this;
 
 	// start/stop run variables
 	private Button startRun;
@@ -523,84 +503,10 @@ public class RunningActivity extends Activity implements
 		stepDetector.registerListener();
 	}
 
-	private class GetBpmAsync extends AsyncTask<String, Integer, Integer> {
-		@Override
-		protected Integer doInBackground(String... params) {
-			String song = params[0];
-			String artist = params[1];
-			try {
-				return getBpm(song, artist);
-			} catch (UnsupportedEncodingException e) {
-				return -1;
-			}
-		}
-
-		@Override
-		protected void onPostExecute(Integer integer) {
-			super.onPostExecute(integer);
-			currentSongBpm = integer;
-			// REMOVE LATER///////////////////////////
-			Toast.makeText(context, "BPM:" + currentSongBpm, Toast.LENGTH_SHORT)
-					.show();
-			// ///////////////////////////////////////
-		}
-
-		private JSONObject getJSON(String url) throws JSONException {
-			final StringBuilder builder = new StringBuilder();
-			final HttpClient client = new DefaultHttpClient();
-			final HttpGet httpGet = new HttpGet(url);
-			try {
-				HttpResponse response = client.execute(httpGet);
-				HttpEntity entity = response.getEntity();
-				InputStream content = entity.getContent();
-				BufferedReader reader = new BufferedReader(
-						new InputStreamReader(content));
-				String line;
-				while ((line = reader.readLine()) != null) {
-					builder.append(line);
-				}
-			} catch (ClientProtocolException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			return new JSONObject(builder.toString());
-		}
-
-		private Integer getBpm(String song, String artist)
-				throws UnsupportedEncodingException {
-			String base = "http://developer.echonest.com/api/v4/song/";
-			String url1 = base + "search?api_key=" + API_KEY + "&artist="
-					+ URLEncoder.encode(artist, "UTF-8") + "&title="
-					+ URLEncoder.encode(song, "UTF-8");
-			try {
-				JSONArray songsArray1 = getJSON(url1).getJSONObject("response")
-						.getJSONArray("songs");
-				if (songsArray1.length() > 0) {
-					String songID = songsArray1.getJSONObject(0)
-							.getString("id");
-					String url2 = base + "profile?api_key=" + API_KEY + "&id="
-							+ songID + "&bucket=audio_summary";
-					JSONArray songsArray2 = getJSON(url2).getJSONObject(
-							"response").getJSONArray("songs");
-					if (songsArray2.length() > 0) {
-						String tempo = songsArray2.getJSONObject(0)
-								.getJSONObject("audio_summary")
-								.getString("tempo");
-						return Math.round(Float.parseFloat(tempo));
-					}
-				}
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-			return -1;
-		}
-	}
-
 	private void updateCurrentBPM() {
 		currentSongBpm = -1;
 		SongItem item = songAdapter.getSongItem(currentSongIndex);
-		new GetBpmAsync().execute(item.getTitle(), item.getArtist());
+		new SongBpmRetriever().getBpm(item.getTitle(), item.getArtist(), this);
 	}
 	
 	private void onStepDetected (double timestamp) {
@@ -625,16 +531,10 @@ public class RunningActivity extends Activity implements
 					artistNameTextView.setText(String.format("%.2f", pace));
 				}
 			}
-			// (sum/ct) is average interval between onset detections
-			//bpm = (float) (60 / (sum / ct));
-			//float tempo = bpm / songBpm;
-			//artistNameTextView.setText(Float.toString(tempo));
-			//if (tempo < 0.5f)
-			//	tempo = 0.5f;
-			//else if (tempo > 1.5f)
-			//	tempo = 1.5f;
-			//st.setTempo(tempo);
-			//
 		}
+	}
+	
+	public void setCurrentSongBpm(float currSongBpm) {
+		currentSongBpm = currSongBpm;
 	}
 }
