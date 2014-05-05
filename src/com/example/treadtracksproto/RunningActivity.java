@@ -1,9 +1,7 @@
 package com.example.treadtracksproto;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
@@ -483,7 +481,11 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
         protected Integer doInBackground(String... params) {
             String song = params[0];
             String artist = params[1];
-            return getBpm(song, artist);
+            try {
+                return getBpm(song, artist);
+            } catch ( UnsupportedEncodingException e){
+                return -1;
+            }
         }
 
         @Override
@@ -517,19 +519,24 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
             return new JSONObject(builder.toString());
         }
 
-        private Integer getBpm(String song, String artist){
+        private Integer getBpm(String song, String artist) throws UnsupportedEncodingException{
             String base = "http://developer.echonest.com/api/v4/song/";
-            String url1 = base + "search?api_key=" + API_KEY + "&artist="
-                    + artist.replaceAll("&", "%20").replaceAll(" ", "%20")
-                    + "&title="
-                    + song.replaceAll("&", "%20").replaceAll(" ", "%20");
+            String url1 = base + "search?api_key="
+                               + API_KEY
+                               + "&artist="
+                               + URLEncoder.encode(artist, "UTF-8")
+                               + "&title="
+                               + URLEncoder.encode(song, "UTF-8");
             try {
                 JSONArray songsArray1 = getJSON(url1).getJSONObject("response")
                         .getJSONArray("songs");
                 if (songsArray1.length() > 0) {
                     String songID = songsArray1.getJSONObject(0).getString("id");
-                    String url2 = base + "profile?api_key=" + API_KEY + "&id="
-                            + songID + "&bucket=audio_summary";
+                    String url2 = base + "profile?api_key="
+                                       + API_KEY
+                                       + "&id="
+                                       + songID
+                                       + "&bucket=audio_summary";
                     JSONArray songsArray2 = getJSON(url2).getJSONObject("response")
                             .getJSONArray("songs");
                     if (songsArray2.length() > 0) {
