@@ -312,6 +312,7 @@ public class RunningActivity extends Activity {
 			artistNameTextView.setText(item.getArtist());
 			albumArtImageView.setImageBitmap(item.getAlbumArt());
 			playImageButton.setBackgroundResource(R.drawable.icon_22165);
+            tempoSeekBar.setProgress(50);
             st.play();
             isPlaying = true;
         } catch (IOException e) {
