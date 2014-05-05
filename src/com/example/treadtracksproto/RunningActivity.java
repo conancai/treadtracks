@@ -85,8 +85,8 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
 	
 	// Detection mode and beat detection variables
 	private int detMode = 0; // 0 = Manual, 1 = Clap, 2 = Accelerometer
-	private double sens = 100, thres = 30; // Might vary depending on phone
-    private double[] times = new double[5]; // Stores up to five times to calculate average
+	private double sens = 120, thres = 30; // Might vary depending on phone
+    private double[] times = new double[10]; // Stores up to five times to calculate average
     private AudioProc mAudioProc;
     private PercussionOnsetDetector onsetDetector;
     private static final int SAMPLE_RATE = 16000;
@@ -435,7 +435,7 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
 					if (i > 0) times[i-1] = times[i];
 				}
 				if (ct > 0) {
-					float songBpm = (currentSongBpm > 0) ? currentSongBpm : 60;
+					float songBpm = (currentSongBpm > 0) ? currentSongBpm : 80;
 					// (sum/ct) is average interval between onset detections
 					bpm = (float)(60/(sum/ct));
 					float tempo = bpm/songBpm;
@@ -452,7 +452,7 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
     private void refreshBeats() {
     	if (detMode == 1) {
     		for (int j = 0; j < times.length; j++) times[j] = -1;
-    		mAudioProc.listen();
+    		if (!mAudioProc.isRecording()) mAudioProc.listen();
     	}
     }
 
