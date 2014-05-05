@@ -93,6 +93,7 @@ public class PlaylistActivity extends ListActivity {
 
 		Intent i = new Intent(this, SonglistActivity.class);
 		i.putExtra("playlistID", playlistID);
+		i.putExtra("name", name);
 		startActivity(i);
 
 		// send info to other view, populate other view with items.
