@@ -352,6 +352,7 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
 			artistNameTextView.setText(item.getArtist());
 			albumArtImageView.setImageBitmap(item.getAlbumArt());
 			playImageButton.setBackgroundResource(R.drawable.icon_22165);
+			tempoSeekBar.setProgress(50);
 			st.play();
 			refreshBeats();
 			isPlaying = true;

@@ -16,6 +16,7 @@
     <string name="action_songs">Songs</string>
     <string name="action_playlists">Playlists</string>
     <string name="action_player">Player</string>
+    <string name="playlist_title">Playlists</string>
 
     <!-- activity player page strings -->
     <string name="song_name">Song Name</string>

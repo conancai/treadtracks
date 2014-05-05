@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class SonglistActivity extends ListActivity {
 
@@ -33,6 +34,9 @@ public class SonglistActivity extends ListActivity {
 
 		Intent intent = getIntent();
 		playlistID = intent.getExtras().getString("playlistID");
+
+		TextView title = (TextView) findViewById(R.id.songlist_title);
+		title.setText(intent.getExtras().getString("name"));
 
 		Cursor cursor;
 		ContentResolver cr = this.getContentResolver();
