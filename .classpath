@@ -10,5 +10,6 @@
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
+	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/SoundTouch-Android"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

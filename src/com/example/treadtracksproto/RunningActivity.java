@@ -31,6 +31,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -94,10 +95,14 @@ public class RunningActivity extends Activity implements
 	private double sens = 120, thres = 30; // Might vary depending on phone
 	private double[] times = new double[10]; // Stores up to five times to
 												// calculate average
+	double curTempo = -1;
 	private AudioProc mAudioProc;
 	private PercussionOnsetDetector onsetDetector;
 	private static final int SAMPLE_RATE = 16000;
 
+	// Accelerometer-based step detector
+	private StepDetector stepDetector;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -118,6 +123,15 @@ public class RunningActivity extends Activity implements
 		// initialize variables for start/stop run
 		startRun = (Button) findViewById(R.id.start_run);
 		statsPageIntent = new Intent(this, StatsPage.class);
+		
+		OnsetHandler stepHandler = new OnsetHandler() {
+			@Override
+			public void handleOnset(double time, double salience) {
+				onStepDetected(time);
+			}
+		};
+		stepDetector = new StepDetector((SensorManager) this.getSystemService(SENSOR_SERVICE),
+				stepHandler);
 
 		Intent intent = getIntent();
 
@@ -504,6 +518,9 @@ public class RunningActivity extends Activity implements
 		songNameTextView.setText(item.getTitle());
 		artistNameTextView.setText(item.getArtist());
 		albumArtImageView.setImageBitmap(item.getAlbumArt());
+		
+		// Register the accelerometer
+		stepDetector.registerListener();
 	}
 
 	private class GetBpmAsync extends AsyncTask<String, Integer, Integer> {
@@ -584,5 +601,40 @@ public class RunningActivity extends Activity implements
 		currentSongBpm = -1;
 		SongItem item = songAdapter.getSongItem(currentSongIndex);
 		new GetBpmAsync().execute(item.getTitle(), item.getArtist());
+	}
+	
+	private void onStepDetected (double timestamp) {
+		if (detMode == 2) {
+			double pace = stepDetector.getStepsPerMinute();
+			// Want it to be full at 200 steps/min
+			// Bottom at ~50 steps/min
+			double songBpm = (currentSongBpm > 0) ? currentSongBpm : 100;
+			double tempoRatio = pace / songBpm;
+			if (tempoRatio < .7) tempoRatio = .7;
+			if (tempoRatio > 1.5) tempoRatio = 1.5;
+			
+			//artistNameTextView.setText(String.format("%.2f", tempoRatio));
+			
+			if (pace > 0) {
+				if (Math.abs(curTempo - tempoRatio) > .1) {
+					curTempo = tempoRatio;
+					st.setTempo((float) tempoRatio);
+					
+					int seekProgress = (int) (pace/2);
+					tempoSeekBar.setProgress(seekProgress);
+					artistNameTextView.setText(String.format("%.2f", pace));
+				}
+			}
+			// (sum/ct) is average interval between onset detections
+			//bpm = (float) (60 / (sum / ct));
+			//float tempo = bpm / songBpm;
+			//artistNameTextView.setText(Float.toString(tempo));
+			//if (tempo < 0.5f)
+			//	tempo = 0.5f;
+			//else if (tempo > 1.5f)
+			//	tempo = 1.5f;
+			//st.setTempo(tempo);
+			//
+		}
 	}
 }
