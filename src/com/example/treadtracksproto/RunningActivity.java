@@ -1,6 +1,10 @@
 package com.example.treadtracksproto;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Random;
@@ -25,6 +29,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -46,10 +51,11 @@ import be.hogent.tarsos.dsp.onsets.PercussionOnsetDetector;
 
 import com.smp.soundtouchandroid.SoundTouchPlayable;
 
-public class RunningActivity extends Activity implements AudioProc.OnAudioEventListener, OnsetHandler {
-    private String API_KEY = "0SU5PIXAMC7BHFFLK";
-    private String TAG = "treadtracks";
-    private Context context = this;
+public class RunningActivity extends Activity implements
+		AudioProc.OnAudioEventListener, OnsetHandler {
+	private String API_KEY = "0SU5PIXAMC7BHFFLK";
+	private String TAG = "treadtracks";
+	private Context context = this;
 
 	// start/stop run variables
 	private Button startRun;
@@ -76,20 +82,21 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
 	private Stack<Integer> prevSongs = new Stack<Integer>();
 	private Stack<Integer> nextSongs = new Stack<Integer>();
 	private float bpm = 0, currentSongBpm = -1;
-    ExecutorService networkService = Executors.newSingleThreadExecutor();
-    
-    private String playlistID = null;
-    private String songPosition = null;
+	ExecutorService networkService = Executors.newSingleThreadExecutor();
+
+	private String playlistID = null;
+	private String songPosition = null;
 	private long startTime = 0;
 	private long endTime = 0;
-	
+
 	// Detection mode and beat detection variables
 	private int detMode = 0; // 0 = Manual, 1 = Clap, 2 = Accelerometer
 	private double sens = 120, thres = 30; // Might vary depending on phone
-    private double[] times = new double[10]; // Stores up to five times to calculate average
-    private AudioProc mAudioProc;
-    private PercussionOnsetDetector onsetDetector;
-    private static final int SAMPLE_RATE = 16000;
+	private double[] times = new double[10]; // Stores up to five times to
+												// calculate average
+	private AudioProc mAudioProc;
+	private PercussionOnsetDetector onsetDetector;
+	private static final int SAMPLE_RATE = 16000;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -180,7 +187,7 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
 		} else {
 			currentSongIndex = Integer.parseInt(songPosition);
 		}
-		
+
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle(R.string.dialog_title);
 		builder.setAdapter(songAdapter, new DialogInterface.OnClickListener() {
@@ -191,93 +198,97 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
 			}
 		});
 		songListDialog = builder.create();
-		
-		final String[] detChoices = {"Manual", "Claps", "Accelerometer"};
+
+		final String[] detChoices = { "Manual", "Claps", "Accelerometer" };
 		builder = new AlertDialog.Builder(this);
 		builder.setTitle("Choose Detection Mode");
-		builder.setSingleChoiceItems(detChoices, 0, new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialogInterface, int i) {
-				detMode = i;
-				tempoSeekBar.setEnabled(i == 0);
-				dialogInterface.dismiss();
-				if (detMode == 1) {
-					refreshBeats();
-				}
-				else if (mAudioProc.isRecording()) {
-					mAudioProc.stop();
-				}
-				//detModeItem.setTitle("Detection: " + detChoices[i]);
-			}
-		});
+		builder.setSingleChoiceItems(detChoices, 0,
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialogInterface, int i) {
+						detMode = i;
+						tempoSeekBar.setEnabled(i == 0);
+						dialogInterface.dismiss();
+						if (detMode == 1) {
+							refreshBeats();
+						} else if (mAudioProc.isRecording()) {
+							mAudioProc.stop();
+						}
+						// detModeItem.setTitle("Detection: " + detChoices[i]);
+					}
+				});
 		modeDetDialog = builder.create();
 
 		playImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!isPlaying) {
-                    if (!isRunning) {
-                        isRunning = true;
-                        startRun.setText(R.string.stop_run);
-                        startRun.setBackgroundResource(R.drawable.rounded_button_red);
-                        setNewSong(currentSongIndex);
-                    }
-                    st.play();
-                    refreshBeats();
-                    playImageButton.setBackgroundResource(R.drawable.icon_22165);
-                    isPlaying = true;
-                } else {
-                    st.pause();
-                    if (mAudioProc.isRecording()) mAudioProc.stop();
-                    playImageButton.setBackgroundResource(R.drawable.icon_22164);
-                    isPlaying = false;
-                }
-            }
-        });
+			@Override
+			public void onClick(View view) {
+				if (!isPlaying) {
+					if (!isRunning) {
+						isRunning = true;
+						startRun.setText(R.string.stop_run);
+						startRun.setBackgroundResource(R.drawable.rounded_button_red);
+						setNewSong(currentSongIndex);
+					}
+					st.play();
+					refreshBeats();
+					playImageButton
+							.setBackgroundResource(R.drawable.icon_22165);
+					isPlaying = true;
+				} else {
+					st.pause();
+					if (mAudioProc.isRecording())
+						mAudioProc.stop();
+					playImageButton
+							.setBackgroundResource(R.drawable.icon_22164);
+					isPlaying = false;
+				}
+			}
+		});
 
 		nextImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                prevSongs.push(currentSongIndex);
-                if (!isRunning) {
-                    isRunning = true;
-                    startRun.setText(R.string.stop_run);
-                    startRun.setBackgroundResource(R.drawable.rounded_button_red);
-                }
-                if (!nextSongs.empty()) {
-                    setNewSong(nextSongs.pop());
-                } else {
-                    setNewSong(pickRandomSong());
-                }
+			@Override
+			public void onClick(View view) {
+				prevSongs.push(currentSongIndex);
+				if (!isRunning) {
+					isRunning = true;
+					startRun.setText(R.string.stop_run);
+					startRun.setBackgroundResource(R.drawable.rounded_button_red);
+				}
+				if (!nextSongs.empty()) {
+					setNewSong(nextSongs.pop());
+				} else {
+					setNewSong(pickRandomSong());
+				}
 
-            }
-        });
+			}
+		});
 
 		previousImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (st.getPlayedDuration() > 5000000l) { // 5 seconds?
-                    st.pause();
-                    if (mAudioProc.isRecording()) mAudioProc.stop();
-                    st.seekTo(0, true);
-                    st.play();
-                    refreshBeats();
-                } else {
-                    nextSongs.push(currentSongIndex);
-                    if (!isRunning) {
-                        isRunning = true;
-                        startRun.setText(R.string.stop_run);
-                        startRun.setBackgroundResource(R.drawable.rounded_button_red);
-                        setNewSong(currentSongIndex);
-                    }
-                    if (!prevSongs.empty()) {
-                        setNewSong(prevSongs.pop());
-                    } else {
-                        setNewSong(pickRandomSong());
-                    }
-                }
-            }
-        });
+			@Override
+			public void onClick(View view) {
+				if (st.getPlayedDuration() > 5000000l) { // 5 seconds?
+					st.pause();
+					if (mAudioProc.isRecording())
+						mAudioProc.stop();
+					st.seekTo(0, true);
+					st.play();
+					refreshBeats();
+				} else {
+					nextSongs.push(currentSongIndex);
+					if (!isRunning) {
+						isRunning = true;
+						startRun.setText(R.string.stop_run);
+						startRun.setBackgroundResource(R.drawable.rounded_button_red);
+						setNewSong(currentSongIndex);
+					}
+					if (!prevSongs.empty()) {
+						setNewSong(prevSongs.pop());
+					} else {
+						setNewSong(pickRandomSong());
+					}
+				}
+			}
+		});
 
 		startRun.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -288,13 +299,20 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
 					startRun.setBackgroundResource(R.drawable.rounded_button_red);
 					setNewSong(currentSongIndex);
 					startTime = System.currentTimeMillis();
-				} else { // else take user to the calibration page
+				} else { // else take user to the stats page
+					SharedPreferences settings = getSharedPreferences(
+							"TreadTracksPref", 0);
+					SharedPreferences.Editor editor = settings.edit();
+					editor.putBoolean("dialogShown", true);
+					editor.commit();
 					isRunning = false;
 					startRun.setText(R.string.start_run);
 					startRun.setBackgroundResource(R.drawable.rounded_button);
 					st.pause();
-					if (mAudioProc.isRecording()) mAudioProc.stop();
-					playImageButton.setBackgroundResource(R.drawable.icon_22164);
+					if (mAudioProc.isRecording())
+						mAudioProc.stop();
+					playImageButton
+							.setBackgroundResource(R.drawable.icon_22164);
 					isPlaying = false;
 					endTime = System.currentTimeMillis();
 					long runDuration = endTime - startTime;
@@ -304,46 +322,53 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
 			}
 		});
 
-		tempoSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-			@Override
-			public void onStopTrackingTouch(SeekBar arg0) { }
-			
-			@Override
-			public void onStartTrackingTouch(SeekBar arg0) { }
-			
-			@Override
-			public void onProgressChanged(SeekBar bar, int value, boolean unused) {
-				if (detMode == 0) {
-					// Sets the tempo based on the seek bar value
-					// Seek bar goes from 0 to 100, so we need to adjust value
-					// Current range: 50 to 150
-					float tempo = (value + 50);
-					if (st != null) {
-						// Want the value to range from .5 to 1.5
-						st.setTempo(tempo / 100f);
+		tempoSeekBar
+				.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+					@Override
+					public void onStopTrackingTouch(SeekBar arg0) {
 					}
-				}
-			}
-		});
-		
+
+					@Override
+					public void onStartTrackingTouch(SeekBar arg0) {
+					}
+
+					@Override
+					public void onProgressChanged(SeekBar bar, int value,
+							boolean unused) {
+						if (detMode == 0) {
+							// Sets the tempo based on the seek bar value
+							// Seek bar goes from 0 to 100, so we need to adjust
+							// value
+							// Current range: 50 to 150
+							float tempo = (value + 50);
+							if (st != null) {
+								// Want the value to range from .5 to 1.5
+								st.setTempo(tempo / 100f);
+							}
+						}
+					}
+				});
+
 		mAudioProc = new AudioProc(SAMPLE_RATE);
-		onsetDetector = new PercussionOnsetDetector(SAMPLE_RATE, mAudioProc.getBufferSize()/2, this, sens, thres);
+		onsetDetector = new PercussionOnsetDetector(SAMPLE_RATE,
+				mAudioProc.getBufferSize() / 2, this, sens, thres);
 		mAudioProc.setOnAudioEventListener(this);
 	}
 
 	private void setNewSong(int i) {
 		currentSongIndex = i;
 		updateCurrentBPM();
-        try {
+		try {
 			if (st != null) {
 				st.stop();
 				st = null;
 				isPlaying = false;
 			}
-			if (mAudioProc.isRecording()) mAudioProc.stop();
+			if (mAudioProc.isRecording())
+				mAudioProc.stop();
 			SongItem item = songAdapter.getSongItem(i);
 			st = new SoundTouchPlayable(new SongProgressListener(),
-				item.getFilepath(), 0, 1f, 0) {
+					item.getFilepath(), 0, 1f, 0) {
 			};
 			new Thread(st).start();
 			songNameTextView.setText(item.getTitle());
@@ -400,7 +425,7 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
 		case R.id.action_playlists:
 			startActivity(new Intent(this, PlaylistActivity.class));
 			break;
-			
+
 		case R.id.action_detection_mode:
 			modeDetDialog.show();
 			break;
@@ -408,7 +433,7 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
 
 		return super.onOptionsItemSelected(item);
 	}
-	
+
 	// Beat Detection
 	@Override
 	public void processAudioProcEvent(AudioEvent ae) {
@@ -422,39 +447,44 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
 			public void run() {
 				int ct = 0;
 				double sum = 0, last = -1;
-				times[times.length-1] = time;
+				times[times.length - 1] = time;
 				for (int i = 0; i < times.length; i++) {
 					if (times[i] > 0) {
 						if (last > 0) {
 							// (times[i]-last) is onset interval in seconds
-							sum += times[i]-last;
+							sum += times[i] - last;
 							ct++;
 						}
 						last = times[i];
 					}
-					if (i > 0) times[i-1] = times[i];
+					if (i > 0)
+						times[i - 1] = times[i];
 				}
 				if (ct > 0) {
 					float songBpm = (currentSongBpm > 0) ? currentSongBpm : 80;
 					// (sum/ct) is average interval between onset detections
-					bpm = (float)(60/(sum/ct));
-					float tempo = bpm/songBpm;
+					bpm = (float) (60 / (sum / ct));
+					float tempo = bpm / songBpm;
 					artistNameTextView.setText(Float.toString(tempo));
-					if (tempo < 0.5f) tempo = 0.5f;
-					else if (tempo > 1.5f) tempo = 1.5f;
+					if (tempo < 0.5f)
+						tempo = 0.5f;
+					else if (tempo > 1.5f)
+						tempo = 1.5f;
 					st.setTempo(tempo);
-					tempoSeekBar.setProgress((int)(tempo*100-49.5));
+					tempoSeekBar.setProgress((int) (tempo * 100 - 49.5));
 				}
 			}
 		});
 	}
-	
-    private void refreshBeats() {
-    	if (detMode == 1) {
-    		for (int j = 0; j < times.length; j++) times[j] = -1;
-    		if (!mAudioProc.isRecording()) mAudioProc.listen();
-    	}
-    }
+
+	private void refreshBeats() {
+		if (detMode == 1) {
+			for (int j = 0; j < times.length; j++)
+				times[j] = -1;
+			if (!mAudioProc.isRecording())
+				mAudioProc.listen();
+		}
+	}
 
 	@Override
 	public void onDestroy() {
@@ -476,85 +506,83 @@ public class RunningActivity extends Activity implements AudioProc.OnAudioEventL
 		albumArtImageView.setImageBitmap(item.getAlbumArt());
 	}
 
-    private class GetBpmAsync extends AsyncTask<String, Integer, Integer>{
-        @Override
-        protected Integer doInBackground(String... params) {
-            String song = params[0];
-            String artist = params[1];
-            try {
-                return getBpm(song, artist);
-            } catch ( UnsupportedEncodingException e){
-                return -1;
-            }
-        }
+	private class GetBpmAsync extends AsyncTask<String, Integer, Integer> {
+		@Override
+		protected Integer doInBackground(String... params) {
+			String song = params[0];
+			String artist = params[1];
+			try {
+				return getBpm(song, artist);
+			} catch (UnsupportedEncodingException e) {
+				return -1;
+			}
+		}
 
-        @Override
-        protected void onPostExecute(Integer integer) {
-            super.onPostExecute(integer);
-            currentSongBpm = integer;
-            //REMOVE LATER///////////////////////////
-            Toast.makeText(context, "BPM:" + currentSongBpm, Toast.LENGTH_SHORT).show();
-            /////////////////////////////////////////
-        }
+		@Override
+		protected void onPostExecute(Integer integer) {
+			super.onPostExecute(integer);
+			currentSongBpm = integer;
+			// REMOVE LATER///////////////////////////
+			Toast.makeText(context, "BPM:" + currentSongBpm, Toast.LENGTH_SHORT)
+					.show();
+			// ///////////////////////////////////////
+		}
 
-        private JSONObject getJSON(String url) throws JSONException{
-            final StringBuilder builder = new StringBuilder();
-            final HttpClient client = new DefaultHttpClient();
-            final HttpGet httpGet = new HttpGet(url);
-            try {
-                HttpResponse response = client.execute(httpGet);
-                HttpEntity entity = response.getEntity();
-                InputStream content = entity.getContent();
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(content));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    builder.append(line);
-                }
-            } catch (ClientProtocolException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return new JSONObject(builder.toString());
-        }
+		private JSONObject getJSON(String url) throws JSONException {
+			final StringBuilder builder = new StringBuilder();
+			final HttpClient client = new DefaultHttpClient();
+			final HttpGet httpGet = new HttpGet(url);
+			try {
+				HttpResponse response = client.execute(httpGet);
+				HttpEntity entity = response.getEntity();
+				InputStream content = entity.getContent();
+				BufferedReader reader = new BufferedReader(
+						new InputStreamReader(content));
+				String line;
+				while ((line = reader.readLine()) != null) {
+					builder.append(line);
+				}
+			} catch (ClientProtocolException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return new JSONObject(builder.toString());
+		}
 
-        private Integer getBpm(String song, String artist) throws UnsupportedEncodingException{
-            String base = "http://developer.echonest.com/api/v4/song/";
-            String url1 = base + "search?api_key="
-                               + API_KEY
-                               + "&artist="
-                               + URLEncoder.encode(artist, "UTF-8")
-                               + "&title="
-                               + URLEncoder.encode(song, "UTF-8");
-            try {
-                JSONArray songsArray1 = getJSON(url1).getJSONObject("response")
-                        .getJSONArray("songs");
-                if (songsArray1.length() > 0) {
-                    String songID = songsArray1.getJSONObject(0).getString("id");
-                    String url2 = base + "profile?api_key="
-                                       + API_KEY
-                                       + "&id="
-                                       + songID
-                                       + "&bucket=audio_summary";
-                    JSONArray songsArray2 = getJSON(url2).getJSONObject("response")
-                            .getJSONArray("songs");
-                    if (songsArray2.length() > 0) {
-                        String tempo = songsArray2.getJSONObject(0)
-                                .getJSONObject("audio_summary").getString("tempo");
-                        return Math.round(Float.parseFloat(tempo));
-                    }
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            return -1;
-        }
-    }
+		private Integer getBpm(String song, String artist)
+				throws UnsupportedEncodingException {
+			String base = "http://developer.echonest.com/api/v4/song/";
+			String url1 = base + "search?api_key=" + API_KEY + "&artist="
+					+ URLEncoder.encode(artist, "UTF-8") + "&title="
+					+ URLEncoder.encode(song, "UTF-8");
+			try {
+				JSONArray songsArray1 = getJSON(url1).getJSONObject("response")
+						.getJSONArray("songs");
+				if (songsArray1.length() > 0) {
+					String songID = songsArray1.getJSONObject(0)
+							.getString("id");
+					String url2 = base + "profile?api_key=" + API_KEY + "&id="
+							+ songID + "&bucket=audio_summary";
+					JSONArray songsArray2 = getJSON(url2).getJSONObject(
+							"response").getJSONArray("songs");
+					if (songsArray2.length() > 0) {
+						String tempo = songsArray2.getJSONObject(0)
+								.getJSONObject("audio_summary")
+								.getString("tempo");
+						return Math.round(Float.parseFloat(tempo));
+					}
+				}
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+			return -1;
+		}
+	}
 
-    private void updateCurrentBPM(){
-        currentSongBpm = -1;
-        SongItem item = songAdapter.getSongItem(currentSongIndex);
-        new GetBpmAsync().execute(item.getTitle(), item.getArtist());
-    }
+	private void updateCurrentBPM() {
+		currentSongBpm = -1;
+		SongItem item = songAdapter.getSongItem(currentSongIndex);
+		new GetBpmAsync().execute(item.getTitle(), item.getArtist());
+	}
 }

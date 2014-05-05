@@ -11,6 +11,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
@@ -93,7 +94,20 @@ public class StatsPage extends Activity {
 		postsView = (ListView) this.findViewById(R.id.stats_view);
 		postsView.setDividerHeight(10);
 		postsView.setAdapter(posts);
+		SharedPreferences settings = getSharedPreferences("TreadTracksPref", 0);
+		boolean dialogShown = settings.getBoolean("dialogShown", false);
+		if (dialogShown) {
+			SharedPreferences.Editor editor = settings.edit();
+			editor.putBoolean("dialogShown", false);
+			editor.commit();
+			makeAlert();
+			dialog.show();
+			// disables the done button by default
+			dialog.getButton(dialog.BUTTON_POSITIVE).setEnabled(false);
+		}
+	}
 
+	private void makeAlert() {
 		// alert for entering distance ran
 		alert = new AlertDialog.Builder(StatsPage.this);
 		alert.setTitle("Enter Distance Ran In Miles");
@@ -171,9 +185,6 @@ public class StatsPage extends Activity {
 				}
 			}
 		});
-		dialog.show();
-		// disables the done button by default
-		dialog.getButton(dialog.BUTTON_POSITIVE).setEnabled(false);
 	}
 
 	// calculate minutes per mile based off of total time and distance
