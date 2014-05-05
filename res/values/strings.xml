@@ -12,6 +12,7 @@
     <string name="statEdit">Edit</string>
     <string name="title_activity_calibration_page">CalibrationPage</string>
     <string name="title_activity_running">RunningActivity</string>
+    <string name="action_previous_runs">Previous Runs</string>
     <string name="action_songs">Songs</string>
     <string name="action_playlists">Playlists</string>
     <string name="action_player">Player</string>

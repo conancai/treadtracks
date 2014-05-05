@@ -7,9 +7,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import android.content.Context;
-import android.os.AsyncTask;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -24,10 +24,12 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -40,12 +42,15 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import be.hogent.tarsos.dsp.AudioEvent;
+import be.hogent.tarsos.dsp.onsets.OnsetHandler;
+import be.hogent.tarsos.dsp.onsets.PercussionOnsetDetector;
 
 import com.smp.soundtouchandroid.SoundTouchPlayable;
 
-public class RunningActivity extends Activity {
-	private String API_KEY = "0SU5PIXAMC7BHFFLK";
-	private String TAG = "treadtracks";
+public class RunningActivity extends Activity implements AudioProc.OnAudioEventListener, OnsetHandler {
+    private String API_KEY = "0SU5PIXAMC7BHFFLK";
+    private String TAG = "treadtracks";
     private Context context = this;
 
 	// start/stop run variables
@@ -67,17 +72,26 @@ public class RunningActivity extends Activity {
 	private SoundTouchPlayable st = null;
 	private SongAdapter songAdapter;
 	private AlertDialog songListDialog;
+	private AlertDialog modeDetDialog;
 	private boolean isPlaying = false;
 	private int currentSongIndex;
 	private Stack<Integer> prevSongs = new Stack<Integer>();
 	private Stack<Integer> nextSongs = new Stack<Integer>();
-	private int currentSongBpm = -1;
-
-	private String playlistID = null;
-	private String songPosition = null;
-
+	private float bpm = 0, currentSongBpm = -1;
+    ExecutorService networkService = Executors.newSingleThreadExecutor();
+    
+    private String playlistID = null;
+    private String songPosition = null;
 	private long startTime = 0;
 	private long endTime = 0;
+	
+	// Detection mode and beat detection variables
+	private int detMode = 0; // 0 = Manual, 1 = Clap, 2 = Accelerometer
+	private double sens = 100, thres = 30; // Might vary depending on phone
+    private double[] times = new double[5]; // Stores up to five times to calculate average
+    private AudioProc mAudioProc;
+    private PercussionOnsetDetector onsetDetector;
+    private static final int SAMPLE_RATE = 16000;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -168,9 +182,9 @@ public class RunningActivity extends Activity {
 		} else {
 			currentSongIndex = Integer.parseInt(songPosition);
 		}
+		
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle(R.string.dialog_title);
-
 		builder.setAdapter(songAdapter, new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialogInterface, int i) {
@@ -179,6 +193,26 @@ public class RunningActivity extends Activity {
 			}
 		});
 		songListDialog = builder.create();
+		
+		final String[] detChoices = {"Manual", "Claps", "Accelerometer"};
+		builder = new AlertDialog.Builder(this);
+		builder.setTitle("Choose Detection Mode");
+		builder.setSingleChoiceItems(detChoices, 0, new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialogInterface, int i) {
+				detMode = i;
+				tempoSeekBar.setEnabled(i == 0);
+				dialogInterface.dismiss();
+				if (detMode == 1) {
+					refreshBeats();
+				}
+				else if (mAudioProc.isRecording()) {
+					mAudioProc.stop();
+				}
+				//detModeItem.setTitle("Detection: " + detChoices[i]);
+			}
+		});
+		modeDetDialog = builder.create();
 
 		playImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -191,10 +225,12 @@ public class RunningActivity extends Activity {
                         setNewSong(currentSongIndex);
                     }
                     st.play();
+                    refreshBeats();
                     playImageButton.setBackgroundResource(R.drawable.icon_22165);
                     isPlaying = true;
                 } else {
                     st.pause();
+                    if (mAudioProc.isRecording()) mAudioProc.stop();
                     playImageButton.setBackgroundResource(R.drawable.icon_22164);
                     isPlaying = false;
                 }
@@ -224,8 +260,10 @@ public class RunningActivity extends Activity {
             public void onClick(View view) {
                 if (st.getPlayedDuration() > 5000000l) { // 5 seconds?
                     st.pause();
+                    if (mAudioProc.isRecording()) mAudioProc.stop();
                     st.seekTo(0, true);
                     st.play();
+                    refreshBeats();
                 } else {
                     nextSongs.push(currentSongIndex);
                     if (!isRunning) {
@@ -257,6 +295,7 @@ public class RunningActivity extends Activity {
 					startRun.setText(R.string.start_run);
 					startRun.setBackgroundResource(R.drawable.rounded_button);
 					st.pause();
+					if (mAudioProc.isRecording()) mAudioProc.stop();
 					playImageButton.setBackgroundResource(R.drawable.icon_22164);
 					isPlaying = false;
 					endTime = System.currentTimeMillis();
@@ -268,29 +307,30 @@ public class RunningActivity extends Activity {
 		});
 
 		tempoSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-
-            @Override
-            public void onStopTrackingTouch(SeekBar arg0) {
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar arg0) {
-            }
-
-            @Override
-            public void onProgressChanged(SeekBar bar, int value,
-                    boolean unused) {
-                // Sets the tempo based on the seek bar value
-                // Seek bar goes from 0 to 100, so we need to adjust
-                // value
-                // Current range: 50 to 150
-                float tempo = (value + 50);
-                if (st != null) {
-                    // Want the value to range from .5 to 1.5
-                    st.setTempo(tempo / 100f);
-                }
-            }
-        });
+			@Override
+			public void onStopTrackingTouch(SeekBar arg0) { }
+			
+			@Override
+			public void onStartTrackingTouch(SeekBar arg0) { }
+			
+			@Override
+			public void onProgressChanged(SeekBar bar, int value, boolean unused) {
+				if (detMode == 0) {
+					// Sets the tempo based on the seek bar value
+					// Seek bar goes from 0 to 100, so we need to adjust value
+					// Current range: 50 to 150
+					float tempo = (value + 50);
+					if (st != null) {
+						// Want the value to range from .5 to 1.5
+						st.setTempo(tempo / 100f);
+					}
+				}
+			}
+		});
+		
+		mAudioProc = new AudioProc(SAMPLE_RATE);
+		onsetDetector = new PercussionOnsetDetector(SAMPLE_RATE, mAudioProc.getBufferSize()/2, this, sens, thres);
+		mAudioProc.setOnAudioEventListener(this);
 	}
 
 	private void setNewSong(int i) {
@@ -302,20 +342,21 @@ public class RunningActivity extends Activity {
 				st = null;
 				isPlaying = false;
 			}
+			if (mAudioProc.isRecording()) mAudioProc.stop();
 			SongItem item = songAdapter.getSongItem(i);
 			st = new SoundTouchPlayable(new SongProgressListener(),
-					item.getFilepath(), 0, 1, 0) {
-
+				item.getFilepath(), 0, 1f, 0) {
 			};
 			new Thread(st).start();
 			songNameTextView.setText(item.getTitle());
 			artistNameTextView.setText(item.getArtist());
 			albumArtImageView.setImageBitmap(item.getAlbumArt());
 			playImageButton.setBackgroundResource(R.drawable.icon_22165);
-            tempoSeekBar.setProgress(50);
-            st.play();
-            isPlaying = true;
-        } catch (IOException e) {
+			tempoSeekBar.setProgress(50);
+			st.play();
+			refreshBeats();
+			isPlaying = true;
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -361,16 +402,70 @@ public class RunningActivity extends Activity {
 		case R.id.action_playlists:
 			startActivity(new Intent(this, PlaylistActivity.class));
 			break;
+			
+		case R.id.action_detection_mode:
+			modeDetDialog.show();
+			break;
 		}
 
 		return super.onOptionsItemSelected(item);
 	}
+	
+	// Beat Detection
+	@Override
+	public void processAudioProcEvent(AudioEvent ae) {
+		onsetDetector.process(ae);
+	}
+
+	@Override
+	public void handleOnset(final double time, double salience) {
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				int ct = 0;
+				double sum = 0, last = -1;
+				times[times.length-1] = time;
+				for (int i = 0; i < times.length; i++) {
+					if (times[i] > 0) {
+						if (last > 0) {
+							// (times[i]-last) is onset interval in seconds
+							sum += times[i]-last;
+							ct++;
+						}
+						last = times[i];
+					}
+					if (i > 0) times[i-1] = times[i];
+				}
+				if (ct > 0) {
+					float songBpm = (currentSongBpm > 0) ? currentSongBpm : 60;
+					// (sum/ct) is average interval between onset detections
+					bpm = (float)(60/(sum/ct));
+					float tempo = bpm/songBpm;
+					artistNameTextView.setText(Float.toString(tempo));
+					if (tempo < 0.5f) tempo = 0.5f;
+					else if (tempo > 1.5f) tempo = 1.5f;
+					st.setTempo(tempo);
+					tempoSeekBar.setProgress((int)(tempo*100-49.5));
+				}
+			}
+		});
+	}
+	
+    private void refreshBeats() {
+    	if (detMode == 1) {
+    		for (int j = 0; j < times.length; j++) times[j] = -1;
+    		mAudioProc.listen();
+    	}
+    }
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
 		if (st != null) {
 			st.stop();
+		}
+		if (mAudioProc.isRecording()) {
+			mAudioProc.stop();
 		}
 	}
 
