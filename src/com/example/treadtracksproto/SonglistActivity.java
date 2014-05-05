@@ -140,9 +140,14 @@ public class SonglistActivity extends ListActivity {
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
+		switch (item.getItemId()) {
+		case R.id.action_previous_runs:
+			startActivity(new Intent(this, StatsPage.class));
+			break;
+
+		case R.id.action_player:
+			startActivity(new Intent(this, RunningActivity.class));
+			break;
 		}
 		return super.onOptionsItemSelected(item);
 	}
