@@ -99,7 +99,7 @@ public class StepDetector implements SensorEventListener {
 					(stepTimes.length - stepsSkipped);
 			
 			//return stepsSkipped;
-			if (oldestStep > 0 && timeForSteps > 2 && stepsSkipped < 2) {
+			if (oldestStep > 0 && timeForSteps > 1 && stepsSkipped < 3) {
 			//	// Got a valid pace
 				return stepsPerMin;
 			} else {
