@@ -17,7 +17,7 @@ public class StepDetector implements SensorEventListener {
 	private SensorManager mSensorManager;
 	
 	int stepIndex = 0;
-	long [] stepTimes = new long[6];
+	long [] stepTimes = new long[8];
 	int numSteps;
 	
 	private boolean currentlyStepping;
@@ -99,7 +99,7 @@ public class StepDetector implements SensorEventListener {
 					(stepTimes.length - stepsSkipped);
 			
 			//return stepsSkipped;
-			if (oldestStep > 0 && timeForSteps > 1 && stepsSkipped < 3) {
+			if (oldestStep > 0 && timeForSteps > 2 && stepsSkipped < 3) {
 			//	// Got a valid pace
 				return stepsPerMin;
 			} else {
