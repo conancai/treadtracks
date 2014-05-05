@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">TreadTracksProto</string>
-    <string name="app_title">Tread Tracks</string>
+    <string name="app_title">TreadTracks</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_stats_page">StatsPage</string>
