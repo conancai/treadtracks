@@ -6,7 +6,6 @@
 *.lock
 *.DS_Store
 *.swp
-*out/
 *.iml
 bin/
 gen/
@@ -14,3 +13,6 @@ gen/
 
 ## ignore since will be different for everyone
 project.properties
+
+out/
+*.apk
