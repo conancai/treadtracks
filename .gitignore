@@ -6,7 +6,7 @@
 *.lock
 *.DS_Store
 *.swp
-*.out
+*out/
 *.iml
 bin/
 gen/
