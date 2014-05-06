@@ -18,7 +18,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.os.AsyncTask;
-import android.widget.Toast;
 
 public class SongBpmRetriever extends AsyncTask<String, Integer, Integer> {
 	
@@ -46,9 +45,6 @@ public class SongBpmRetriever extends AsyncTask<String, Integer, Integer> {
 		super.onPostExecute(integer);
 		if (runningActivity != null) {
 			runningActivity.setCurrentSongBpm(integer);
-			// REMOVE LATER///////////////////////////
-			Toast.makeText(runningActivity, "BPM:" + integer, Toast.LENGTH_SHORT).show();
-			//////////////////////////////////////////
 		}
 	}
 
