@@ -475,7 +475,7 @@ public class RunningActivity extends Activity implements
 						tempoRatio = 1.5f;
 					st.setTempo(tempoRatio);
 					tempoSeekBar.setProgress((int)(bpm/2));
-					artistNameTextView.setText(String.format("%.2f", bpm));
+					//artistNameTextView.setText(String.format("%.2f", bpm));
 				}
 			}
 		});
@@ -536,7 +536,7 @@ public class RunningActivity extends Activity implements
 					
 					int seekProgress = (int) (pace/2);
 					tempoSeekBar.setProgress(seekProgress);
-					artistNameTextView.setText(String.format("%.2f", pace));
+					//artistNameTextView.setText(String.format("%.2f", pace));
 				}
 			}
 		}
@@ -544,8 +544,6 @@ public class RunningActivity extends Activity implements
 	
 	public void setCurrentSongBpm(float currSongBpm) {
 		currentSongBpm = currSongBpm;
-		// REMOVE LATER///////////////////////////
 		Toast.makeText(this, "BPM:" + currentSongBpm, Toast.LENGTH_SHORT).show();
-		//////////////////////////////////////////
 	}
 }
