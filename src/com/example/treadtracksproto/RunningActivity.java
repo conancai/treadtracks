@@ -28,6 +28,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import be.hogent.tarsos.dsp.AudioEvent;
 import be.hogent.tarsos.dsp.onsets.OnsetHandler;
 import be.hogent.tarsos.dsp.onsets.PercussionOnsetDetector;
@@ -452,32 +453,29 @@ public class RunningActivity extends Activity implements
 			@Override
 			public void run() {
 				int ct = 0;
-				double sum = 0, last = -1;
+				double oldestTime = -1;
 				times[times.length - 1] = time;
 				for (int i = 0; i < times.length; i++) {
-					if (times[i] > 0) {
-						if (last > 0) {
-							// (times[i]-last) is onset interval in seconds
-							sum += times[i] - last;
-							ct++;
+					if ((times[i] > 0) && (time-times[i] < 10)) {
+						if (oldestTime < 0) {
+							oldestTime = times[i];
 						}
-						last = times[i];
+						ct++;
 					}
-					if (i > 0)
-						times[i - 1] = times[i];
+					if (i > 0) times[i-1] = times[i];
 				}
-				if (ct > 0) {
-					float songBpm = (currentSongBpm > 0) ? currentSongBpm : 80;
+				if (oldestTime > 0 && ct > 6) {
+					float songBpm = (currentSongBpm > 0) ? currentSongBpm : 100;
 					// (sum/ct) is average interval between onset detections
-					bpm = (float) (60 / (sum / ct));
-					float tempo = bpm / songBpm;
-					artistNameTextView.setText(Float.toString(tempo));
-					if (tempo < 0.5f)
-						tempo = 0.5f;
-					else if (tempo > 1.5f)
-						tempo = 1.5f;
-					st.setTempo(tempo);
-					tempoSeekBar.setProgress((int) (tempo * 100 - 49.5));
+					bpm = (float) (60.0 * ct / (time-oldestTime));
+					float tempoRatio = bpm / songBpm;
+					if (tempoRatio < 0.7)
+						tempoRatio = 0.7f;
+					else if (tempoRatio > 1.5)
+						tempoRatio = 1.5f;
+					st.setTempo(tempoRatio);
+					tempoSeekBar.setProgress((int)(bpm/2));
+					artistNameTextView.setText(String.format("%.2f", bpm));
 				}
 			}
 		});
@@ -531,8 +529,6 @@ public class RunningActivity extends Activity implements
 			if (tempoRatio < .7) tempoRatio = .7;
 			if (tempoRatio > 1.5) tempoRatio = 1.5;
 			
-			//artistNameTextView.setText(String.format("%.2f", tempoRatio));
-			
 			if (pace > 0) {
 				if (Math.abs(curTempo - tempoRatio) > .1) {
 					curTempo = tempoRatio;
@@ -548,5 +544,8 @@ public class RunningActivity extends Activity implements
 	
 	public void setCurrentSongBpm(float currSongBpm) {
 		currentSongBpm = currSongBpm;
+		// REMOVE LATER///////////////////////////
+		Toast.makeText(this, "BPM:" + currentSongBpm, Toast.LENGTH_SHORT).show();
+		//////////////////////////////////////////
 	}
 }
