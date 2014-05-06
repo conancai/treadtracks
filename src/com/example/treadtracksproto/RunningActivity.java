@@ -37,6 +37,7 @@ import com.smp.soundtouchandroid.SoundTouchPlayable;
 public class RunningActivity extends Activity implements
 		AudioProc.OnAudioEventListener, OnsetHandler {
 	private String TAG = "treadtracks";
+	final Integer PLAYLIST_ACTIVITY = 1;
 
 	// start/stop run variables
 	private Button startRun;
@@ -65,8 +66,8 @@ public class RunningActivity extends Activity implements
 	private float bpm = 0, currentSongBpm = -1;
 	ExecutorService networkService = Executors.newSingleThreadExecutor();
 
-	private String playlistID = null;
-	private String songPosition = null;
+	//private String playlistID = null;
+	//private String songPosition = null;
 	private long startTime = 0;
 	private long endTime = 0;
 
@@ -113,88 +114,10 @@ public class RunningActivity extends Activity implements
 		stepDetector = new StepDetector((SensorManager) this.getSystemService(SENSOR_SERVICE),
 				stepHandler);
 
-		Intent intent = getIntent();
-
-		playlistID = intent.getStringExtra("playlistID");
-		songPosition = intent.getStringExtra("songPosition");
-		Log.d("TAG", "recieving playlistID: " + playlistID + " songPosition: "
-				+ songPosition);
-
-		ArrayList<SongItem> songData = new ArrayList<SongItem>();
-		String selection = MediaStore.Audio.Media.IS_MUSIC + "!=0";
-		ContentResolver cr = this.getContentResolver();
-		if (playlistID == null || playlistID.equals("all")) {
-			// Query the MediaStore for all music files
-			String[] projection = { MediaStore.Audio.Media.TITLE,
-					MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.DATA,
-					MediaStore.Audio.Media.ALBUM_ID };
-			String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
-			Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-			cursor = cr.query(uri, projection, selection, null, sortOrder);
-			cursor.moveToFirst();
-
-			for (int i = 0; i < cursor.getCount(); i++) {
-				songData.add(new SongItem(
-						this,
-						cursor.getString(cursor
-								.getColumnIndex(MediaStore.Audio.Media.TITLE)),
-						cursor.getString(cursor
-								.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
-						cursor.getString(cursor
-								.getColumnIndex(MediaStore.Audio.Media.DATA)),
-						cursor.getString(cursor
-								.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))));
-				cursor.moveToNext();
-			}
-			cursor.close();
-		} else {
-			String[] projection = { MediaStore.Audio.Playlists.Members.TITLE,
-					MediaStore.Audio.Playlists.Members.ARTIST,
-					MediaStore.Audio.Playlists.Members.DATA,
-					MediaStore.Audio.Playlists.Members.ALBUM_ID };
-			Long id = Long.parseLong(playlistID);
-			Uri uri = MediaStore.Audio.Playlists.Members.getContentUri(
-					"external", id);
-			cursor = cr.query(uri, projection, selection, null, null);
-			cursor.moveToFirst();
-
-			for (int i = 0; i < cursor.getCount(); i++) {
-				songData.add(new SongItem(
-						this,
-						cursor.getString(cursor
-								.getColumnIndex(MediaStore.Audio.Playlists.Members.TITLE)),
-						cursor.getString(cursor
-								.getColumnIndex(MediaStore.Audio.Playlists.Members.ARTIST)),
-						cursor.getString(cursor
-								.getColumnIndex(MediaStore.Audio.Playlists.Members.DATA)),
-						cursor.getString(cursor
-								.getColumnIndex(MediaStore.Audio.Playlists.Members.ALBUM_ID))));
-				cursor.moveToNext();
-			}
-			cursor.close();
-		}
-
-		songAdapter = new SongAdapter(this, R.layout.song_row_item,
-				songData.toArray(new SongItem[0]));
-		if (songPosition == null) {
-			currentSongIndex = pickRandomSong();
-		} else {
-			currentSongIndex = Integer.parseInt(songPosition);
-		}
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle(R.string.dialog_title);
-		builder.setAdapter(songAdapter, new DialogInterface.OnClickListener() {
-			@Override
-			public void onClick(DialogInterface dialogInterface, int i) {
-				prevSongs.push(currentSongIndex);
-				setNewSong(i);
-			}
-		});
-		songListDialog = builder.create();
+		setPlaylist("all", "0"); // set playlist to all music and song to the first one
 
 		final String[] detChoices = { "Manual", "Claps", "Accelerometer" };
-		builder = new AlertDialog.Builder(this);
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("Choose Detection Mode");
 		builder.setSingleChoiceItems(detChoices, 0,
 				new DialogInterface.OnClickListener() {
@@ -348,6 +271,94 @@ public class RunningActivity extends Activity implements
 				mAudioProc.getBufferSize() / 2, this, sens, thres);
 		mAudioProc.setOnAudioEventListener(this);
 	}
+	
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+	
+		Log.d(TAG, "onActivityResult called");
+		
+		super.onActivityResult(requestCode, resultCode, data);
+		if(requestCode == PLAYLIST_ACTIVITY) {
+			if (resultCode == Activity.RESULT_OK){ 
+				setPlaylist(data.getStringExtra("playlistID"), data.getStringExtra("songPosition"));
+			}
+		}
+	}
+	
+	public void setPlaylist(String playlistID, String songPosition) {
+		
+		ArrayList<SongItem> songData = new ArrayList<SongItem>();
+		String selection = MediaStore.Audio.Media.IS_MUSIC + "!=0";
+		ContentResolver cr = this.getContentResolver();
+		if (playlistID == null || playlistID.equals("all")) {
+			// Query the MediaStore for all music files
+			String[] projection = { MediaStore.Audio.Media.TITLE,
+					MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.DATA,
+					MediaStore.Audio.Media.ALBUM_ID };
+			String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+			Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+			cursor = cr.query(uri, projection, selection, null, sortOrder);
+			cursor.moveToFirst();
+
+			for (int i = 0; i < cursor.getCount(); i++) {
+				songData.add(new SongItem(
+						this,
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Media.DATA)),
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))));
+				cursor.moveToNext();
+			}
+			cursor.close();
+		} else {
+			String[] projection = { MediaStore.Audio.Playlists.Members.TITLE,
+					MediaStore.Audio.Playlists.Members.ARTIST,
+					MediaStore.Audio.Playlists.Members.DATA,
+					MediaStore.Audio.Playlists.Members.ALBUM_ID };
+			Long id = Long.parseLong(playlistID);
+			Uri uri = MediaStore.Audio.Playlists.Members.getContentUri(
+					"external", id);
+			cursor = cr.query(uri, projection, selection, null, null);
+			cursor.moveToFirst();
+
+			for (int i = 0; i < cursor.getCount(); i++) {
+				songData.add(new SongItem(
+						this,
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Playlists.Members.TITLE)),
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Playlists.Members.ARTIST)),
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Playlists.Members.DATA)),
+						cursor.getString(cursor
+								.getColumnIndex(MediaStore.Audio.Playlists.Members.ALBUM_ID))));
+				cursor.moveToNext();
+			}
+			cursor.close();
+		}
+
+		songAdapter = new SongAdapter(this, R.layout.song_row_item,
+				songData.toArray(new SongItem[0]));
+		if (songPosition == null) {
+			currentSongIndex = pickRandomSong();
+		} else {
+			currentSongIndex = Integer.parseInt(songPosition);
+		}
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.dialog_title);
+		builder.setAdapter(songAdapter, new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialogInterface, int i) {
+				prevSongs.push(currentSongIndex);
+				setNewSong(i);
+			}
+		});
+		songListDialog = builder.create();
+	}
 
 	private void setNewSong(int i) {
 		currentSongIndex = i;
@@ -417,7 +428,8 @@ public class RunningActivity extends Activity implements
 			break;
 
 		case R.id.action_playlists:
-			startActivity(new Intent(this, PlaylistActivity.class));
+			Intent i = new Intent(this, PlaylistActivity.class);
+			startActivityForResult(i, PLAYLIST_ACTIVITY);
 			break;
 
 		case R.id.action_detection_mode:

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import android.app.ActionBar;
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.ListActivity;
 import android.content.ContentResolver;
@@ -24,6 +25,8 @@ import android.widget.TextView;
 
 public class PlaylistActivity extends ListActivity {
 
+	final Integer PLAYLIST_ACTIVITY = 1;
+	
 	private TextView playlistName;
 	private HashMap<String, String> playlists;
 
@@ -94,10 +97,29 @@ public class PlaylistActivity extends ListActivity {
 		Intent i = new Intent(this, SonglistActivity.class);
 		i.putExtra("playlistID", playlistID);
 		i.putExtra("name", name);
-		startActivity(i);
+		startActivityForResult(i, PLAYLIST_ACTIVITY);
 
 		// send info to other view, populate other view with items.
 	}
+	
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		
+		Log.d("TAG", "onActivityResult for playlistactivity called");
+		
+		super.onActivityResult(requestCode, resultCode, data);
+		if(requestCode == PLAYLIST_ACTIVITY) {
+			if (resultCode == Activity.RESULT_OK){ 
+				Intent i = new Intent();
+				i.putExtra("playlistID", data.getStringExtra("playlistID"));
+				i.putExtra("songPosition", data.getStringExtra("songPosition"));
+				
+				setResult(Activity.RESULT_OK, i);
+				finish();
+			}
+		}
+	}
+
+	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {

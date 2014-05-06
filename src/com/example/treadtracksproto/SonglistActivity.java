@@ -3,6 +3,7 @@ package com.example.treadtracksproto;
 import java.util.ArrayList;
 
 import android.app.ActionBar;
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.ListActivity;
 import android.content.ContentResolver;
@@ -122,12 +123,14 @@ public class SonglistActivity extends ListActivity {
 		// Log.d("TAG", "Song name: " + item.getTitle() + " song artist: " +
 		// item.getArtist());
 
-		Intent i = new Intent(this, RunningActivity.class);
+		Intent i = new Intent();
 		i.putExtra("playlistID", playlistID);
 		i.putExtra("songPosition", Integer.toString(position));
-		Log.d("TAG", "sending intent playlistID: " + playlistID
-				+ " songposition: " + position);
-		startActivity(i);
+		setResult(Activity.RESULT_OK, i);
+		
+		Log.d("TAG", "results");
+		
+		finish();
 
 	}
 
