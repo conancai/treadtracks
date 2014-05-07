@@ -28,7 +28,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import be.hogent.tarsos.dsp.AudioEvent;
 import be.hogent.tarsos.dsp.onsets.OnsetHandler;
 import be.hogent.tarsos.dsp.onsets.PercussionOnsetDetector;
@@ -61,6 +60,7 @@ public class RunningActivity extends Activity implements
 	private AlertDialog songListDialog;
 	private AlertDialog modeDetDialog;
 	private boolean isPlaying = false;
+	private boolean isShuffle = false;
 	private int currentSongIndex;
 	private Stack<Integer> prevSongs = new Stack<Integer>();
 	private Stack<Integer> nextSongs = new Stack<Integer>();
@@ -175,7 +175,17 @@ public class RunningActivity extends Activity implements
 				if (!nextSongs.empty()) {
 					setNewSong(nextSongs.pop());
 				} else {
-					setNewSong(pickRandomSong());
+					if (isShuffle) {
+						Log.d("Tag", "NEXT PICKING RANDOM SONG");
+						setNewSong(pickRandomSong());
+					} else {
+						Log.d("Tag", "NEXT NOT PICKING RANDOM SONG");
+						if (currentSongIndex +1 < songAdapter.getCount()) {
+							setNewSong(currentSongIndex + 1);
+						} else {
+							setNewSong(0);
+						}
+					}
 				}
 
 			}
@@ -202,7 +212,15 @@ public class RunningActivity extends Activity implements
 					if (!prevSongs.empty()) {
 						setNewSong(prevSongs.pop());
 					} else {
-						setNewSong(pickRandomSong());
+						if (isShuffle) {
+							setNewSong(pickRandomSong());
+						} else {
+							if (currentSongIndex - 1 >= 0) {
+								setNewSong(currentSongIndex - 1);
+							} else {
+								setNewSong(songAdapter.getCount() - 1);
+							}
+						}
 					}
 				}
 			}
@@ -274,12 +292,13 @@ public class RunningActivity extends Activity implements
 	}
 	
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-	
-		Log.d(TAG, "onActivityResult called");
 		
 		super.onActivityResult(requestCode, resultCode, data);
 		if(requestCode == PLAYLIST_ACTIVITY) {
 			if (resultCode == Activity.RESULT_OK){ 
+				
+				Log.d("Tag", "onactivityresult playlistID: " + data.getStringExtra("playlistID") + " songPosition: " + data.getStringExtra("songPosition"));
+				
 				setPlaylist(data.getStringExtra("playlistID"), data.getStringExtra("songPosition"));
 			}
 		}
@@ -343,9 +362,11 @@ public class RunningActivity extends Activity implements
 
 		songAdapter = new SongAdapter(this, R.layout.song_row_item,
 				songData.toArray(new SongItem[0]));
-		if (songPosition == null) {
+		if (songPosition == null || songPosition.equals("shuffle")) {
+			isShuffle = true;
 			currentSongIndex = pickRandomSong();
 		} else {
+			isShuffle = false;
 			currentSongIndex = Integer.parseInt(songPosition);
 		}
 
@@ -399,7 +420,15 @@ public class RunningActivity extends Activity implements
 		@Override
 		public void onTrackEnd(int track) {
 			prevSongs.push(currentSongIndex);
-			setNewSong(pickRandomSong());
+			if (isShuffle) {
+				setNewSong(pickRandomSong());
+			} else {
+				if (currentSongIndex +1 < songAdapter.getCount()) {
+					setNewSong(currentSongIndex+1);
+				} else {
+					setNewSong(0);
+				}
+			}
 		}
 
 		@Override
@@ -429,6 +458,7 @@ public class RunningActivity extends Activity implements
 			break;
 
 		case R.id.action_playlists:
+			
 			Intent i = new Intent(this, PlaylistActivity.class);
 			startActivityForResult(i, PLAYLIST_ACTIVITY);
 			break;
@@ -453,29 +483,32 @@ public class RunningActivity extends Activity implements
 			@Override
 			public void run() {
 				int ct = 0;
-				double oldestTime = -1;
+				double sum = 0, last = -1;
 				times[times.length - 1] = time;
 				for (int i = 0; i < times.length; i++) {
-					if ((times[i] > 0) && (time-times[i] < 10)) {
-						if (oldestTime < 0) {
-							oldestTime = times[i];
+					if (times[i] > 0) {
+						if (last > 0) {
+							// (times[i]-last) is onset interval in seconds
+							sum += times[i] - last;
+							ct++;
 						}
-						ct++;
+						last = times[i];
 					}
-					if (i > 0) times[i-1] = times[i];
+					if (i > 0)
+						times[i - 1] = times[i];
 				}
-				if (oldestTime > 0 && ct > 6) {
-					float songBpm = (currentSongBpm > 0) ? currentSongBpm : 100;
+				if (ct > 0) {
+					float songBpm = (currentSongBpm > 0) ? currentSongBpm : 80;
 					// (sum/ct) is average interval between onset detections
-					bpm = (float) (60.0 * ct / (time-oldestTime));
-					float tempoRatio = bpm / songBpm;
-					if (tempoRatio < 0.7)
-						tempoRatio = 0.7f;
-					else if (tempoRatio > 1.5)
-						tempoRatio = 1.5f;
-					st.setTempo(tempoRatio);
-					tempoSeekBar.setProgress((int)(bpm/2));
-					//artistNameTextView.setText(String.format("%.2f", bpm));
+					bpm = (float) (60 / (sum / ct));
+					float tempo = bpm / songBpm;
+					artistNameTextView.setText(Float.toString(tempo));
+					if (tempo < 0.5f)
+						tempo = 0.5f;
+					else if (tempo > 1.5f)
+						tempo = 1.5f;
+					st.setTempo(tempo);
+					tempoSeekBar.setProgress((int) (tempo * 100 - 49.5));
 				}
 			}
 		});
@@ -529,6 +562,8 @@ public class RunningActivity extends Activity implements
 			if (tempoRatio < .7) tempoRatio = .7;
 			if (tempoRatio > 1.5) tempoRatio = 1.5;
 			
+			//artistNameTextView.setText(String.format("%.2f", tempoRatio));
+			
 			if (pace > 0) {
 				if (Math.abs(curTempo - tempoRatio) > .1) {
 					curTempo = tempoRatio;
@@ -536,7 +571,7 @@ public class RunningActivity extends Activity implements
 					
 					int seekProgress = (int) (pace/2);
 					tempoSeekBar.setProgress(seekProgress);
-					//artistNameTextView.setText(String.format("%.2f", pace));
+					artistNameTextView.setText(String.format("%.2f", pace));
 				}
 			}
 		}
@@ -544,6 +579,5 @@ public class RunningActivity extends Activity implements
 	
 	public void setCurrentSongBpm(float currSongBpm) {
 		currentSongBpm = currSongBpm;
-		Toast.makeText(this, "BPM:" + currentSongBpm, Toast.LENGTH_SHORT).show();
 	}
 }

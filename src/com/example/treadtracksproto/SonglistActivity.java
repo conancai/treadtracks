@@ -44,6 +44,9 @@ public class SonglistActivity extends ListActivity {
 		String selection = MediaStore.Audio.Media.IS_MUSIC + "!=0";
 
 		ArrayList<SongItem> songData = new ArrayList<SongItem>();
+		
+		//shuffle option
+		songData.add(new SongItem( this, "Shuffle", "", null, null));
 
 		if (playlistID.equals("all")) {
 
@@ -119,16 +122,16 @@ public class SonglistActivity extends ListActivity {
 			long id) {
 		super.onListItemClick(listView, view, position, id);
 
-		// SongItem item = (SongItem) listView.getItemAtPosition(position);
-		// Log.d("TAG", "Song name: " + item.getTitle() + " song artist: " +
-		// item.getArtist());
-
 		Intent i = new Intent();
 		i.putExtra("playlistID", playlistID);
-		i.putExtra("songPosition", Integer.toString(position));
-		setResult(Activity.RESULT_OK, i);
 		
-		Log.d("TAG", "results");
+		if (position == 0) {
+			i.putExtra("songPosition", "shuffle");
+		} else {
+			i.putExtra("songPosition", Integer.toString(position-1));
+		}
+		Log.d("TAG", "playlistID: " + playlistID + " songPosition: " + position);
+		setResult(Activity.RESULT_OK, i);
 		
 		finish();
 

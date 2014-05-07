@@ -104,8 +104,6 @@ public class PlaylistActivity extends ListActivity {
 	
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		
-		Log.d("TAG", "onActivityResult for playlistactivity called");
-		
 		super.onActivityResult(requestCode, resultCode, data);
 		if(requestCode == PLAYLIST_ACTIVITY) {
 			if (resultCode == Activity.RESULT_OK){ 
@@ -117,9 +115,7 @@ public class PlaylistActivity extends ListActivity {
 				finish();
 			}
 		}
-	}
-
-	
+	}	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
