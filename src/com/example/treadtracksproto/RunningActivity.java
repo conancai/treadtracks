@@ -4,8 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -28,16 +27,14 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import be.hogent.tarsos.dsp.AudioEvent;
 import be.hogent.tarsos.dsp.onsets.OnsetHandler;
-import be.hogent.tarsos.dsp.onsets.PercussionOnsetDetector;
 
 import com.smp.soundtouchandroid.SoundTouchPlayable;
 
-public class RunningActivity extends Activity implements
-		AudioProc.OnAudioEventListener, OnsetHandler {
+public class RunningActivity extends Activity {
 	private String TAG = "treadtracks";
-	final Integer PLAYLIST_ACTIVITY = 1;
+    private RunningActivity mainActivity = this;
+    final Integer PLAYLIST_ACTIVITY = 1;
 
 	// start/stop run variables
 	private Button startRun;
@@ -65,25 +62,28 @@ public class RunningActivity extends Activity implements
 	private Stack<Integer> prevSongs = new Stack<Integer>();
 	private Stack<Integer> nextSongs = new Stack<Integer>();
 	private float bpm = 0, currentSongBpm = -1;
-	ExecutorService networkService = Executors.newSingleThreadExecutor();
 
-	//private String playlistID = null;
-	//private String songPosition = null;
 	private long startTime = 0;
 	private long endTime = 0;
 
-	// Detection mode and beat detection variables
-	private int detMode = 0; // 0 = Manual, 1 = Clap, 2 = Accelerometer
-	private double sens = 120, thres = 30; // Might vary depending on phone
-	private double[] times = new double[10]; // Stores up to five times to
-												// calculate average
-	double curTempo = -1;
-	private AudioProc mAudioProc;
-	private PercussionOnsetDetector onsetDetector;
-	private static final int SAMPLE_RATE = 16000;
+    //Clap/Accelerometer variables
+    float targetChange = 1f;
+    float realChange = 1f;
 
-	// Accelerometer-based step detector
-	private StepDetector stepDetector;
+    //Clap detection variables
+    private int clapCount = 0;
+    ScheduledExecutorService clapExecutorService = Executors.newSingleThreadScheduledExecutor();
+    ScheduledFuture<?> clapTargetHandle;
+    ScheduledFuture<?> targetToRealHandle;
+    Clapper clapDetector;
+
+    // Detection mode and beat detection variables
+    private int detMode = 0; // 0 = Manual, 1 = Clap, 2 = Accelerometer
+    ScheduledFuture<?> accelTargetHandle;
+    boolean refreshed = false;
+
+    // Accelerometer-based step detector
+    private StepDetector stepDetector;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -124,15 +124,97 @@ public class RunningActivity extends Activity implements
 				new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialogInterface, int i) {
-						detMode = i;
+                        int prevDetMode = detMode;
+                        detMode = i;
 						tempoSeekBar.setEnabled(i == 0);
 						dialogInterface.dismiss();
-						if (detMode == 1) {
-							refreshBeats();
-						} else if (mAudioProc.isRecording()) {
-							mAudioProc.stop();
-						}
-						// detModeItem.setTitle("Detection: " + detChoices[i]);
+                        if(detMode != prevDetMode){
+                            //Leaving mode cleanup
+                            if(prevDetMode == 1) { //Switching away from clap detection mode
+                                clapDetector.finishRecord();
+                                clapTargetHandle.cancel(true);
+                                targetToRealHandle.cancel(true);
+                            } else if (prevDetMode == 2){
+                                targetToRealHandle.cancel(true);
+                                accelTargetHandle.cancel(true);
+                            }
+
+                            //Entering mode init
+                            if(detMode == 1){   //Clap Detection Mode
+                                //Start listening for claps
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        clapDetector = new Clapper(mainActivity);
+                                        clapDetector.startRecord();
+                                    }
+                                }).start();
+
+                                //Update target percent change based on claps detected
+                                //Taken from accelerometer onStepDetected
+                                clapTargetHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        double pace = clapCount*24;
+                                        clapCount = 0;
+                                        double songBpm = (currentSongBpm > 0) ? currentSongBpm : 100;
+                                        double tempoRatio = pace / songBpm;
+
+                                        if (tempoRatio == 0) tempoRatio = 1;
+                                        else if (tempoRatio < .85) tempoRatio = .85;
+                                        else if (tempoRatio > 1.5) tempoRatio = 1.5;
+                                        targetChange = (float) tempoRatio;
+                                    }
+                                }, 0, 2500, TimeUnit.MILLISECONDS);
+
+                                //Gently change real % change to target % change to avoid sudden jumps
+                                targetToRealHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        float diff = targetChange - realChange;
+                                        if(Math.abs(diff) > 0.05f){
+                                            realChange += (diff/Math.abs(diff))*0.05f;
+                                        } else {
+                                            realChange = targetChange;
+                                        }
+
+                                        if(st != null){
+                                            st.setTempo(realChange);
+                                        }
+
+                                        tempoSeekBar.setProgress(percentToProg(realChange));
+                                    }
+                                }, 0, 200, TimeUnit.MILLISECONDS);
+                            }
+                            else if(detMode == 2){
+                                //Gently change real % change to target % change to avoid sudden jumps
+                                targetToRealHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        float diff = targetChange - realChange;
+                                        if(Math.abs(diff) > 0.05f){
+                                            realChange += (diff/Math.abs(diff))*0.05f;
+                                        } else {
+                                            realChange = targetChange;
+                                        }
+
+                                        if(st != null){
+                                            st.setTempo(realChange);
+                                        }
+                                        tempoSeekBar.setProgress(percentToProg(realChange));
+                                    }
+                                }, 0, 200, TimeUnit.MILLISECONDS);
+                                accelTargetHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if(!refreshed){
+                                            targetChange = 1f;
+                                        }
+                                        refreshed = false;
+                                    }
+                                }, 0, 3000, TimeUnit.MILLISECONDS);
+                            }
+                        }
 					}
 				});
 		modeDetDialog = builder.create();
@@ -148,14 +230,11 @@ public class RunningActivity extends Activity implements
 						setNewSong(currentSongIndex);
 					}
 					st.play();
-					refreshBeats();
 					playImageButton
 							.setBackgroundResource(R.drawable.icon_22165);
 					isPlaying = true;
 				} else {
 					st.pause();
-					if (mAudioProc.isRecording())
-						mAudioProc.stop();
 					playImageButton
 							.setBackgroundResource(R.drawable.icon_22164);
 					isPlaying = false;
@@ -196,11 +275,8 @@ public class RunningActivity extends Activity implements
 			public void onClick(View view) {
 				if (st.getPlayedDuration() > 5000000l) { // 5 seconds?
 					st.pause();
-					if (mAudioProc.isRecording())
-						mAudioProc.stop();
 					st.seekTo(0, true);
 					st.play();
-					refreshBeats();
 				} else {
 					nextSongs.push(currentSongIndex);
 					if (!isRunning) {
@@ -245,8 +321,6 @@ public class RunningActivity extends Activity implements
 					startRun.setText(R.string.start_run);
 					startRun.setBackgroundResource(R.drawable.rounded_button);
 					st.pause();
-					if (mAudioProc.isRecording())
-						mAudioProc.stop();
 					playImageButton
 							.setBackgroundResource(R.drawable.icon_22164);
 					isPlaying = false;
@@ -271,24 +345,18 @@ public class RunningActivity extends Activity implements
 					@Override
 					public void onProgressChanged(SeekBar bar, int value,
 							boolean unused) {
-						if (detMode == 0) {
-							// Sets the tempo based on the seek bar value
-							// Seek bar goes from 0 to 100, so we need to adjust
-							// value
-							// Current range: 50 to 150
-							float tempo = (value + 50);
-							if (st != null) {
-								// Want the value to range from .5 to 1.5
-								st.setTempo(tempo / 100f);
-							}
-						}
+                        if (detMode == 0) {
+                            // Sets the tempo based on the seek bar value
+                            // Seek bar goes from 0 to 100, so we need to adjust
+                            // value
+                            // Current range: 85 to 150
+                            if (st != null) {
+                                // Want the value to range from .85 to 1.5
+                                st.setTempo(progToPercent(value));
+                            }
+                        }
 					}
 				});
-
-		mAudioProc = new AudioProc(SAMPLE_RATE);
-		onsetDetector = new PercussionOnsetDetector(SAMPLE_RATE,
-				mAudioProc.getBufferSize() / 2, this, sens, thres);
-		mAudioProc.setOnAudioEventListener(this);
 	}
 	
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -391,8 +459,6 @@ public class RunningActivity extends Activity implements
 				st = null;
 				isPlaying = false;
 			}
-			if (mAudioProc.isRecording())
-				mAudioProc.stop();
 			SongItem item = songAdapter.getSongItem(i);
 			st = new SoundTouchPlayable(new SongProgressListener(),
 					item.getFilepath(), 0, 1f, 0) {
@@ -402,9 +468,8 @@ public class RunningActivity extends Activity implements
 			artistNameTextView.setText(item.getArtist());
 			albumArtImageView.setImageBitmap(item.getAlbumArt());
 			playImageButton.setBackgroundResource(R.drawable.icon_22165);
-			tempoSeekBar.setProgress(50);
+            tempoSeekBar.setProgress(percentToProg(1f));
 			st.play();
-			refreshBeats();
 			isPlaying = true;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -471,66 +536,11 @@ public class RunningActivity extends Activity implements
 		return super.onOptionsItemSelected(item);
 	}
 
-	// Beat Detection
-	@Override
-	public void processAudioProcEvent(AudioEvent ae) {
-		onsetDetector.process(ae);
-	}
-
-	@Override
-	public void handleOnset(final double time, double salience) {
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				int ct = 0;
-				double sum = 0, last = -1;
-				times[times.length - 1] = time;
-				for (int i = 0; i < times.length; i++) {
-					if (times[i] > 0) {
-						if (last > 0) {
-							// (times[i]-last) is onset interval in seconds
-							sum += times[i] - last;
-							ct++;
-						}
-						last = times[i];
-					}
-					if (i > 0)
-						times[i - 1] = times[i];
-				}
-				if (ct > 0) {
-					float songBpm = (currentSongBpm > 0) ? currentSongBpm : 80;
-					// (sum/ct) is average interval between onset detections
-					bpm = (float) (60 / (sum / ct));
-					float tempo = bpm / songBpm;
-					artistNameTextView.setText(Float.toString(tempo));
-					if (tempo < 0.5f)
-						tempo = 0.5f;
-					else if (tempo > 1.5f)
-						tempo = 1.5f;
-					st.setTempo(tempo);
-					tempoSeekBar.setProgress((int) (tempo * 100 - 49.5));
-				}
-			}
-		});
-	}
-
-	private void refreshBeats() {
-		if (detMode == 1) {
-			for (int j = 0; j < times.length; j++)
-				times[j] = -1;
-			if (!mAudioProc.isRecording())
-				mAudioProc.listen();
-		}
-	}
-
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
 		if (st != null) {
 			st.stop();
-		}
-		if (mAudioProc.isRecording()) {
-			mAudioProc.stop();
 		}
 	}
 
@@ -551,33 +561,49 @@ public class RunningActivity extends Activity implements
 		SongItem item = songAdapter.getSongItem(currentSongIndex);
 		new SongBpmRetriever().getBpm(item.getTitle(), item.getArtist(), this);
 	}
-	
-	private void onStepDetected (double timestamp) {
-		if (detMode == 2) {
-			double pace = stepDetector.getStepsPerMinute();
-			// Want it to be full at 200 steps/min
-			// Bottom at ~50 steps/min
-			double songBpm = (currentSongBpm > 0) ? currentSongBpm : 100;
-			double tempoRatio = pace / songBpm;
-			if (tempoRatio < .7) tempoRatio = .7;
-			if (tempoRatio > 1.5) tempoRatio = 1.5;
-			
-			//artistNameTextView.setText(String.format("%.2f", tempoRatio));
-			
-			if (pace > 0) {
-				if (Math.abs(curTempo - tempoRatio) > .1) {
-					curTempo = tempoRatio;
-					st.setTempo((float) tempoRatio);
-					
-					int seekProgress = (int) (pace/2);
-					tempoSeekBar.setProgress(seekProgress);
-					artistNameTextView.setText(String.format("%.2f", pace));
-				}
-			}
-		}
-	}
+
+    private void onStepDetected (double timestamp) {
+        if (detMode == 2) {
+            double pace = stepDetector.getStepsPerMinute();
+            // Want it to be full at 200 steps/min
+            // Bottom at ~50 steps/min
+            double songBpm = (currentSongBpm > 0) ? currentSongBpm : 100;
+            double tempoRatio = pace / songBpm;
+            if (pace == -1) tempoRatio = 1;
+            else if (tempoRatio < .85) tempoRatio = .85;
+            else if (tempoRatio > 1.5) tempoRatio = 1.5;
+
+            targetChange = (float) tempoRatio;
+            refreshed = true;
+        }
+    }
+
+    public float progToPercent(int progress){
+        if(progress < 50){
+            return 0.003f * progress + 0.85f;
+        } else if(progress > 50){
+            return 0.01f * progress + 0.5f;
+        } else {
+            return 1;
+        }
+    }
+
+    public int percentToProg(float percent){
+        if(percent < 1){
+            return (int) (333.333f * percent - 283.333f);
+        } else if(percent > 1){
+            return (int) (100f * percent - 50f);
+        } else {
+            return 50;
+        }
+    }
 	
 	public void setCurrentSongBpm(float currSongBpm) {
 		currentSongBpm = currSongBpm;
 	}
+
+    public void addClapCount(){
+        clapCount++;
+        Log.d(TAG, "clap");
+    }
 }
