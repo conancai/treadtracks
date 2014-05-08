@@ -61,7 +61,7 @@ public class RunningActivity extends Activity {
 	private int currentSongIndex;
 	private Stack<Integer> prevSongs = new Stack<Integer>();
 	private Stack<Integer> nextSongs = new Stack<Integer>();
-	private float bpm = 0, currentSongBpm = -1;
+	private float currentSongBpm = -1;
 
 	private long startTime = 0;
 	private long endTime = 0;
@@ -71,11 +71,10 @@ public class RunningActivity extends Activity {
     float realChange = 1f;
 
     //Clap detection variables
-    private int clapCount = 0;
     ScheduledExecutorService clapExecutorService = Executors.newSingleThreadScheduledExecutor();
     ScheduledFuture<?> clapTargetHandle;
     ScheduledFuture<?> targetToRealHandle;
-    Clapper clapDetector;
+    ClapDetector clapDetector;
 
     // Detection mode and beat detection variables
     private int detMode = 0; // 0 = Manual, 1 = Clap, 2 = Accelerometer
@@ -132,8 +131,8 @@ public class RunningActivity extends Activity {
                             //Leaving mode cleanup
                             if(prevDetMode == 1) { //Switching away from clap detection mode
                                 clapDetector.finishRecord();
-                                clapTargetHandle.cancel(true);
                                 targetToRealHandle.cancel(true);
+                                clapTargetHandle.cancel(true);
                             } else if (prevDetMode == 2){
                                 targetToRealHandle.cancel(true);
                                 accelTargetHandle.cancel(true);
@@ -145,7 +144,7 @@ public class RunningActivity extends Activity {
                                 new Thread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        clapDetector = new Clapper(mainActivity);
+                                        clapDetector = new ClapDetector(mainActivity);
                                         clapDetector.startRecord();
                                     }
                                 }).start();
@@ -155,17 +154,12 @@ public class RunningActivity extends Activity {
                                 clapTargetHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
                                     @Override
                                     public void run() {
-                                        double pace = clapCount*24;
-                                        clapCount = 0;
-                                        double songBpm = (currentSongBpm > 0) ? currentSongBpm : 100;
-                                        double tempoRatio = pace / songBpm;
-
-                                        if (tempoRatio == 0) tempoRatio = 1;
-                                        else if (tempoRatio < .85) tempoRatio = .85;
-                                        else if (tempoRatio > 1.5) tempoRatio = 1.5;
-                                        targetChange = (float) tempoRatio;
+                                        if(!refreshed){
+                                            targetChange = 1f;
+                                        }
+                                        refreshed = false;
                                     }
-                                }, 0, 2500, TimeUnit.MILLISECONDS);
+                                }, 0, 1500, TimeUnit.MILLISECONDS);
 
                                 //Gently change real % change to target % change to avoid sudden jumps
                                 targetToRealHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
@@ -187,6 +181,16 @@ public class RunningActivity extends Activity {
                                 }, 0, 200, TimeUnit.MILLISECONDS);
                             }
                             else if(detMode == 2){
+                                accelTargetHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if(!refreshed){
+                                            targetChange = 1f;
+                                        }
+                                        refreshed = false;
+                                    }
+                                }, 0, 1500, TimeUnit.MILLISECONDS);
+
                                 //Gently change real % change to target % change to avoid sudden jumps
                                 targetToRealHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
                                     @Override
@@ -204,15 +208,6 @@ public class RunningActivity extends Activity {
                                         tempoSeekBar.setProgress(percentToProg(realChange));
                                     }
                                 }, 0, 200, TimeUnit.MILLISECONDS);
-                                accelTargetHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if(!refreshed){
-                                            targetChange = 1f;
-                                        }
-                                        refreshed = false;
-                                    }
-                                }, 0, 3000, TimeUnit.MILLISECONDS);
                             }
                         }
 					}
@@ -578,6 +573,20 @@ public class RunningActivity extends Activity {
         }
     }
 
+    public void onClapDetected (double timestamp) {
+        if (detMode == 1) {
+            double pace = clapDetector.getClapsPerMinute();
+            double songBpm = (currentSongBpm > 0) ? currentSongBpm : 100;
+            double tempoRatio = pace / songBpm;
+            if (pace == -1) tempoRatio = 1;
+            else if (tempoRatio < .85) tempoRatio = .85;
+            else if (tempoRatio > 1.5) tempoRatio = 1.5;
+
+            targetChange = (float) tempoRatio;
+            refreshed = true;
+        }
+    }
+
     public float progToPercent(int progress){
         if(progress < 50){
             return 0.003f * progress + 0.85f;
@@ -601,9 +610,4 @@ public class RunningActivity extends Activity {
 	public void setCurrentSongBpm(float currSongBpm) {
 		currentSongBpm = currSongBpm;
 	}
-
-    public void addClapCount(){
-        clapCount++;
-        Log.d(TAG, "clap");
-    }
 }
