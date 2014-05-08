@@ -300,6 +300,8 @@ public class RunningActivity extends Activity implements
 				Log.d("Tag", "onactivityresult playlistID: " + data.getStringExtra("playlistID") + " songPosition: " + data.getStringExtra("songPosition"));
 				
 				setPlaylist(data.getStringExtra("playlistID"), data.getStringExtra("songPosition"));
+				
+				setNewSong(currentSongIndex);
 			}
 		}
 	}
@@ -363,6 +365,7 @@ public class RunningActivity extends Activity implements
 		songAdapter = new SongAdapter(this, R.layout.song_row_item,
 				songData.toArray(new SongItem[0]));
 		if (songPosition == null || songPosition.equals("shuffle")) {
+			Log.d("TAG", "shuffle is true, picking random song");
 			isShuffle = true;
 			currentSongIndex = pickRandomSong();
 		} else {
