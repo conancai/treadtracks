@@ -2,6 +2,7 @@ package com.example.treadtracksproto;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Random;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
@@ -67,8 +68,8 @@ public class RunningActivity extends Activity implements
 	private float bpm = 0, currentSongBpm = -1;
 	ExecutorService networkService = Executors.newSingleThreadExecutor();
 
-	//private String playlistID = null;
-	//private String songPosition = null;
+	// private String playlistID = null;
+	// private String songPosition = null;
 	private long startTime = 0;
 	private long endTime = 0;
 
@@ -84,7 +85,7 @@ public class RunningActivity extends Activity implements
 
 	// Accelerometer-based step detector
 	private StepDetector stepDetector;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -105,17 +106,19 @@ public class RunningActivity extends Activity implements
 		// initialize variables for start/stop run
 		startRun = (Button) findViewById(R.id.start_run);
 		statsPageIntent = new Intent(this, StatsPage.class);
-		
+
 		OnsetHandler stepHandler = new OnsetHandler() {
 			@Override
 			public void handleOnset(double time, double salience) {
 				onStepDetected(time);
 			}
 		};
-		stepDetector = new StepDetector((SensorManager) this.getSystemService(SENSOR_SERVICE),
+		stepDetector = new StepDetector(
+				(SensorManager) this.getSystemService(SENSOR_SERVICE),
 				stepHandler);
 
-		setPlaylist("all", "0"); // set playlist to all music and song to the first one
+		setPlaylist("all", "0"); // set playlist to all music and song to the
+									// first one
 
 		final String[] detChoices = { "Manual", "Claps", "Accelerometer" };
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -180,7 +183,7 @@ public class RunningActivity extends Activity implements
 						setNewSong(pickRandomSong());
 					} else {
 						Log.d("Tag", "NEXT NOT PICKING RANDOM SONG");
-						if (currentSongIndex +1 < songAdapter.getCount()) {
+						if (currentSongIndex + 1 < songAdapter.getCount()) {
 							setNewSong(currentSongIndex + 1);
 						} else {
 							setNewSong(0);
@@ -234,7 +237,8 @@ public class RunningActivity extends Activity implements
 					startRun.setText(R.string.stop_run);
 					startRun.setBackgroundResource(R.drawable.rounded_button_red);
 					setNewSong(currentSongIndex);
-					startTime = System.currentTimeMillis();
+					Calendar startDate = Calendar.getInstance();
+					startTime = startDate.getTimeInMillis();
 				} else { // else take user to the stats page
 					SharedPreferences settings = getSharedPreferences(
 							"TreadTracksPref", 0);
@@ -250,7 +254,8 @@ public class RunningActivity extends Activity implements
 					playImageButton
 							.setBackgroundResource(R.drawable.icon_22164);
 					isPlaying = false;
-					endTime = System.currentTimeMillis();
+					Calendar endDate = Calendar.getInstance();
+					endTime = endDate.getTimeInMillis();
 					long runDuration = endTime - startTime;
 					statsPageIntent.putExtra("runDuration", runDuration);
 					startActivity(statsPageIntent);
@@ -290,24 +295,29 @@ public class RunningActivity extends Activity implements
 				mAudioProc.getBufferSize() / 2, this, sens, thres);
 		mAudioProc.setOnAudioEventListener(this);
 	}
-	
+
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		
+
 		super.onActivityResult(requestCode, resultCode, data);
-		if(requestCode == PLAYLIST_ACTIVITY) {
-			if (resultCode == Activity.RESULT_OK){ 
-				
-				Log.d("Tag", "onactivityresult playlistID: " + data.getStringExtra("playlistID") + " songPosition: " + data.getStringExtra("songPosition"));
-				
-				setPlaylist(data.getStringExtra("playlistID"), data.getStringExtra("songPosition"));
-				
+		if (requestCode == PLAYLIST_ACTIVITY) {
+			if (resultCode == Activity.RESULT_OK) {
+
+				Log.d("Tag",
+						"onactivityresult playlistID: "
+								+ data.getStringExtra("playlistID")
+								+ " songPosition: "
+								+ data.getStringExtra("songPosition"));
+
+				setPlaylist(data.getStringExtra("playlistID"),
+						data.getStringExtra("songPosition"));
+
 				setNewSong(currentSongIndex);
 			}
 		}
 	}
-	
+
 	public void setPlaylist(String playlistID, String songPosition) {
-		
+
 		ArrayList<SongItem> songData = new ArrayList<SongItem>();
 		String selection = MediaStore.Audio.Media.IS_MUSIC + "!=0";
 		ContentResolver cr = this.getContentResolver();
@@ -426,8 +436,8 @@ public class RunningActivity extends Activity implements
 			if (isShuffle) {
 				setNewSong(pickRandomSong());
 			} else {
-				if (currentSongIndex +1 < songAdapter.getCount()) {
-					setNewSong(currentSongIndex+1);
+				if (currentSongIndex + 1 < songAdapter.getCount()) {
+					setNewSong(currentSongIndex + 1);
 				} else {
 					setNewSong(0);
 				}
@@ -461,7 +471,7 @@ public class RunningActivity extends Activity implements
 			break;
 
 		case R.id.action_playlists:
-			
+
 			Intent i = new Intent(this, PlaylistActivity.class);
 			startActivityForResult(i, PLAYLIST_ACTIVITY);
 			break;
@@ -544,7 +554,7 @@ public class RunningActivity extends Activity implements
 		songNameTextView.setText(item.getTitle());
 		artistNameTextView.setText(item.getArtist());
 		albumArtImageView.setImageBitmap(item.getAlbumArt());
-		
+
 		// Register the accelerometer
 		stepDetector.registerListener();
 	}
@@ -554,32 +564,34 @@ public class RunningActivity extends Activity implements
 		SongItem item = songAdapter.getSongItem(currentSongIndex);
 		new SongBpmRetriever().getBpm(item.getTitle(), item.getArtist(), this);
 	}
-	
-	private void onStepDetected (double timestamp) {
+
+	private void onStepDetected(double timestamp) {
 		if (detMode == 2) {
 			double pace = stepDetector.getStepsPerMinute();
 			// Want it to be full at 200 steps/min
 			// Bottom at ~50 steps/min
 			double songBpm = (currentSongBpm > 0) ? currentSongBpm : 100;
 			double tempoRatio = pace / songBpm;
-			if (tempoRatio < .7) tempoRatio = .7;
-			if (tempoRatio > 1.5) tempoRatio = 1.5;
-			
-			//artistNameTextView.setText(String.format("%.2f", tempoRatio));
-			
+			if (tempoRatio < .7)
+				tempoRatio = .7;
+			if (tempoRatio > 1.5)
+				tempoRatio = 1.5;
+
+			// artistNameTextView.setText(String.format("%.2f", tempoRatio));
+
 			if (pace > 0) {
 				if (Math.abs(curTempo - tempoRatio) > .1) {
 					curTempo = tempoRatio;
 					st.setTempo((float) tempoRatio);
-					
-					int seekProgress = (int) (pace/2);
+
+					int seekProgress = (int) (pace / 2);
 					tempoSeekBar.setProgress(seekProgress);
 					artistNameTextView.setText(String.format("%.2f", pace));
 				}
 			}
 		}
 	}
-	
+
 	public void setCurrentSongBpm(float currSongBpm) {
 		currentSongBpm = currSongBpm;
 	}
