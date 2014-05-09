@@ -2,7 +2,6 @@ package com.example.treadtracksproto;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Random;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
@@ -19,6 +18,7 @@ import android.database.Cursor;
 import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
@@ -237,8 +237,7 @@ public class RunningActivity extends Activity implements
 					startRun.setText(R.string.stop_run);
 					startRun.setBackgroundResource(R.drawable.rounded_button_red);
 					setNewSong(currentSongIndex);
-					Calendar startDate = Calendar.getInstance();
-					startTime = startDate.getTimeInMillis();
+					startTime = SystemClock.elapsedRealtime();
 				} else { // else take user to the stats page
 					SharedPreferences settings = getSharedPreferences(
 							"TreadTracksPref", 0);
@@ -254,8 +253,7 @@ public class RunningActivity extends Activity implements
 					playImageButton
 							.setBackgroundResource(R.drawable.icon_22164);
 					isPlaying = false;
-					Calendar endDate = Calendar.getInstance();
-					endTime = endDate.getTimeInMillis();
+					endTime = SystemClock.elapsedRealtime();
 					long runDuration = endTime - startTime;
 					statsPageIntent.putExtra("runDuration", runDuration);
 					startActivity(statsPageIntent);
