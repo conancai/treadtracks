@@ -149,6 +149,7 @@ public class RunningActivity extends Activity implements
 						startRun.setText(R.string.stop_run);
 						startRun.setBackgroundResource(R.drawable.rounded_button_red);
 						setNewSong(currentSongIndex);
+						startTime = SystemClock.elapsedRealtime();
 					}
 					st.play();
 					refreshBeats();
@@ -299,17 +300,17 @@ public class RunningActivity extends Activity implements
 		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == PLAYLIST_ACTIVITY) {
 			if (resultCode == Activity.RESULT_OK) {
-				
+
 				setPlaylist(data.getStringExtra("playlistID"),
 						data.getStringExtra("songPosition"));
 
 				setSongTitleAndArtist(currentSongIndex);
-				
+
 				if (isPlaying) {
 					setNewSong(currentSongIndex);
 				}
-				
-				//setNewSong(currentSongIndex);
+
+				// setNewSong(currentSongIndex);
 			}
 		}
 	}
@@ -387,7 +388,7 @@ public class RunningActivity extends Activity implements
 			@Override
 			public void onClick(DialogInterface dialogInterface, int i) {
 				prevSongs.push(currentSongIndex);
-				
+
 				if (isPlaying) {
 					setNewSong(i);
 				} else {
@@ -397,7 +398,7 @@ public class RunningActivity extends Activity implements
 		});
 		songListDialog = builder.create();
 	}
-		
+
 	private void setSongTitleAndArtist(int i) {
 		if (!isPlaying) {
 			SongItem item = songAdapter.getSongItem(i);
@@ -408,9 +409,9 @@ public class RunningActivity extends Activity implements
 	}
 
 	private void setNewSong(int i) {
-		
+
 		Log.d(TAG, "setting new song");
-		
+
 		currentSongIndex = i;
 		updateCurrentBPM();
 		try {
