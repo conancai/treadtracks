@@ -126,6 +126,7 @@ public class RunningActivity extends Activity {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.dismiss();
+                tempoSeekBar.setEnabled(i==0);
                 int prevDetMode = detMode;
                 detMode = i;
                 if(detMode != prevDetMode){
@@ -152,6 +153,7 @@ public class RunningActivity extends Activity {
         builder.setSingleChoiceItems(detChoices, 2, detModeMenu);
 		modeDetDialog = builder.create();
 
+        tempoSeekBar.setEnabled(false);
         startAccelMode();
 
 		playImageButton.setOnClickListener(new View.OnClickListener() {
@@ -570,7 +572,6 @@ public class RunningActivity extends Activity {
 	}
 
     public void startClapMode(){
-        tempoSeekBar.setEnabled(false);
         //Start listening for claps
         new Thread(new Runnable() {
             @Override
@@ -613,7 +614,6 @@ public class RunningActivity extends Activity {
     }
 
     public void startAccelMode(){
-        tempoSeekBar.setEnabled(false);
         accelTargetHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
