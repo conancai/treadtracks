@@ -19,7 +19,7 @@ import org.json.JSONObject;
 
 import android.os.AsyncTask;
 
-public class SongBpmRetriever extends AsyncTask<String, Integer, Integer> {
+public class SongBpmRetriever extends AsyncTask<String, Float, Float> {
 	
 	private String API_KEY = "0SU5PIXAMC7BHFFLK";
 	private RunningActivity runningActivity;
@@ -30,21 +30,21 @@ public class SongBpmRetriever extends AsyncTask<String, Integer, Integer> {
 	}
 	
 	@Override
-	protected Integer doInBackground(String... params) {
+	protected Float doInBackground(String... params) {
 		String song = params[0];
 		String artist = params[1];
 		try {
 			return getBpmTask(song, artist);
 		} catch (UnsupportedEncodingException e) {
-			return -1;
+			return -1f;
 		}
 	}
 
 	@Override
-	protected void onPostExecute(Integer integer) {
-		super.onPostExecute(integer);
+	protected void onPostExecute(Float f) {
+		super.onPostExecute(f);
 		if (runningActivity != null) {
-			runningActivity.setCurrentSongBpm(integer);
+			runningActivity.setCurrentSongBpm(f);
 		}
 	}
 
@@ -70,7 +70,7 @@ public class SongBpmRetriever extends AsyncTask<String, Integer, Integer> {
 		return new JSONObject(builder.toString());
 	}
 
-	private Integer getBpmTask(String song, String artist)
+	private float getBpmTask(String song, String artist)
 			throws UnsupportedEncodingException {
 		String base = "http://developer.echonest.com/api/v4/song/";
 		String url1 = base + "search?api_key=" + API_KEY + "&artist="
@@ -90,7 +90,7 @@ public class SongBpmRetriever extends AsyncTask<String, Integer, Integer> {
 					String tempo = songsArray2.getJSONObject(0)
 							.getJSONObject("audio_summary")
 							.getString("tempo");
-					return Math.round(Float.parseFloat(tempo));
+					return Float.parseFloat(tempo);
 				}
 			}
 		} catch (JSONException e) {
