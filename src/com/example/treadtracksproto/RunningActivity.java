@@ -125,6 +125,7 @@ public class RunningActivity extends Activity {
 		DialogInterface.OnClickListener detModeMenu = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
                 int prevDetMode = detMode;
                 detMode = i;
                 if(detMode != prevDetMode){
