@@ -299,17 +299,17 @@ public class RunningActivity extends Activity implements
 		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == PLAYLIST_ACTIVITY) {
 			if (resultCode == Activity.RESULT_OK) {
-
-				Log.d("Tag",
-						"onactivityresult playlistID: "
-								+ data.getStringExtra("playlistID")
-								+ " songPosition: "
-								+ data.getStringExtra("songPosition"));
-
+				
 				setPlaylist(data.getStringExtra("playlistID"),
 						data.getStringExtra("songPosition"));
 
-				setNewSong(currentSongIndex);
+				setSongTitleAndArtist(currentSongIndex);
+				
+				if (isPlaying) {
+					setNewSong(currentSongIndex);
+				}
+				
+				//setNewSong(currentSongIndex);
 			}
 		}
 	}
@@ -387,13 +387,30 @@ public class RunningActivity extends Activity implements
 			@Override
 			public void onClick(DialogInterface dialogInterface, int i) {
 				prevSongs.push(currentSongIndex);
-				setNewSong(i);
+				
+				if (isPlaying) {
+					setNewSong(i);
+				} else {
+					setSongTitleAndArtist(i);
+				}
 			}
 		});
 		songListDialog = builder.create();
 	}
+		
+	private void setSongTitleAndArtist(int i) {
+		if (!isPlaying) {
+			SongItem item = songAdapter.getSongItem(i);
+			songNameTextView.setText(item.getTitle());
+			artistNameTextView.setText(item.getArtist());
+			albumArtImageView.setImageBitmap(item.getAlbumArt());
+		}
+	}
 
 	private void setNewSong(int i) {
+		
+		Log.d(TAG, "setting new song");
+		
 		currentSongIndex = i;
 		updateCurrentBPM();
 		try {
