@@ -78,7 +78,7 @@ public class RunningActivity extends Activity {
     ClapDetector clapDetector;
 
     // Detection mode and beat detection variables
-    private int detMode = 0; // 0 = Manual, 1 = Clap, 2 = Accelerometer
+    private int detMode = 2; // 0 = Manual, 1 = Clap, 2 = Accelerometer
     ScheduledFuture<?> accelTargetHandle;
     boolean refreshed = false;
 
@@ -122,100 +122,36 @@ public class RunningActivity extends Activity {
 		final String[] detChoices = { "Manual", "Claps", "Accelerometer" };
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("Choose Detection Mode");
-		builder.setSingleChoiceItems(detChoices, 0,
-				new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialogInterface, int i) {
-                        int prevDetMode = detMode;
-                        detMode = i;
-						tempoSeekBar.setEnabled(i == 0);
-						dialogInterface.dismiss();
-                        if(detMode != prevDetMode){
-                            //Leaving mode cleanup
-                            if(prevDetMode == 1) { //Switching away from clap detection mode
-                                clapDetector.finishRecord();
-                                targetToRealHandle.cancel(true);
-                                clapTargetHandle.cancel(true);
-                            } else if (prevDetMode == 2){
-                                targetToRealHandle.cancel(true);
-                                accelTargetHandle.cancel(true);
-                            }
+		DialogInterface.OnClickListener detModeMenu = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                int prevDetMode = detMode;
+                detMode = i;
+                if(detMode != prevDetMode){
+                    //Leaving mode cleanup
+                    if(prevDetMode == 1) { //Switching away from clap detection mode
+                        clapDetector.finishRecord();
+                        targetToRealHandle.cancel(true);
+                        clapTargetHandle.cancel(true);
+                    } else if (prevDetMode == 2){
+                        targetToRealHandle.cancel(true);
+                        accelTargetHandle.cancel(true);
+                    }
 
-                            //Entering mode init
-                            if(detMode == 1){   //Clap Detection Mode
-                                //Start listening for claps
-                                new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        clapDetector = new ClapDetector(mainActivity);
-                                        clapDetector.startRecord();
-                                    }
-                                }).start();
-
-                                //Update target percent change based on claps detected
-                                //Taken from accelerometer onStepDetected
-                                clapTargetHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if(!refreshed){
-                                            targetChange = 1f;
-                                        }
-                                        refreshed = false;
-                                    }
-                                }, 0, 1500, TimeUnit.MILLISECONDS);
-
-                                //Gently change real % change to target % change to avoid sudden jumps
-                                targetToRealHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        float diff = targetChange - realChange;
-                                        if(Math.abs(diff) > 0.05f){
-                                            realChange += (diff/Math.abs(diff))*0.05f;
-                                        } else {
-                                            realChange = targetChange;
-                                        }
-
-                                        if(st != null){
-                                            st.setTempo(realChange);
-                                        }
-
-                                        tempoSeekBar.setProgress(percentToProg(realChange));
-                                    }
-                                }, 0, 200, TimeUnit.MILLISECONDS);
-                            }
-                            else if(detMode == 2){
-                                accelTargetHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if(!refreshed){
-                                            targetChange = 1f;
-                                        }
-                                        refreshed = false;
-                                    }
-                                }, 0, 1500, TimeUnit.MILLISECONDS);
-
-                                //Gently change real % change to target % change to avoid sudden jumps
-                                targetToRealHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        float diff = targetChange - realChange;
-                                        if(Math.abs(diff) > 0.05f){
-                                            realChange += (diff/Math.abs(diff))*0.05f;
-                                        } else {
-                                            realChange = targetChange;
-                                        }
-
-                                        if(st != null){
-                                            st.setTempo(realChange);
-                                        }
-                                        tempoSeekBar.setProgress(percentToProg(realChange));
-                                    }
-                                }, 0, 200, TimeUnit.MILLISECONDS);
-                            }
-                        }
-					}
-				});
+                    //Entering mode init
+                    if(detMode == 1){   //Clap Detection Mode
+                        startClapMode();
+                    }
+                    else if(detMode == 2){
+                        startAccelMode();
+                    }
+                }
+            }
+        };
+        builder.setSingleChoiceItems(detChoices, 2, detModeMenu);
 		modeDetDialog = builder.create();
+
+        startAccelMode();
 
 		playImageButton.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -245,11 +181,11 @@ public class RunningActivity extends Activity {
 			@Override
 			public void onClick(View view) {
 				prevSongs.push(currentSongIndex);
-				if (!isRunning) {
-					isRunning = true;
-					startRun.setText(R.string.stop_run);
-					startRun.setBackgroundResource(R.drawable.rounded_button_red);
-				}
+//				if (!isRunning) {
+//					isRunning = true;
+//					startRun.setText(R.string.stop_run);
+//					startRun.setBackgroundResource(R.drawable.rounded_button_red);
+//				}
 				if (!nextSongs.empty()) {
 					setNewSong(nextSongs.pop());
 				} else {
@@ -278,12 +214,12 @@ public class RunningActivity extends Activity {
 					st.play();
 				} else {
 					nextSongs.push(currentSongIndex);
-					if (!isRunning) {
-						isRunning = true;
-						startRun.setText(R.string.stop_run);
-						startRun.setBackgroundResource(R.drawable.rounded_button_red);
-						setNewSong(currentSongIndex);
-					}
+//					if (!isRunning) {
+//						isRunning = true;
+//						startRun.setText(R.string.stop_run);
+//						startRun.setBackgroundResource(R.drawable.rounded_button_red);
+//						setNewSong(currentSongIndex);
+//					}
 					if (!prevSongs.empty()) {
 						setNewSong(prevSongs.pop());
 					} else {
@@ -306,9 +242,12 @@ public class RunningActivity extends Activity {
 			public void onClick(View view) {
 				if (!isRunning) {
 					isRunning = true;
+                    isPlaying = true;
 					startRun.setText(R.string.stop_run);
 					startRun.setBackgroundResource(R.drawable.rounded_button_red);
 					setNewSong(currentSongIndex);
+                    playImageButton
+                            .setBackgroundResource(R.drawable.icon_22165);
 					startTime = SystemClock.elapsedRealtime();
 				} else { // else take user to the stats page
 					SharedPreferences settings = getSharedPreferences(
@@ -367,13 +306,7 @@ public class RunningActivity extends Activity {
 				setPlaylist(data.getStringExtra("playlistID"),
 						data.getStringExtra("songPosition"));
 
-				setSongTitleAndArtist(currentSongIndex);
-
-				if (isPlaying) {
-					setNewSong(currentSongIndex);
-				}
-
-				// setNewSong(currentSongIndex);
+                setNewSong(currentSongIndex);
 			}
 		}
 	}
@@ -451,25 +384,20 @@ public class RunningActivity extends Activity {
 			@Override
 			public void onClick(DialogInterface dialogInterface, int i) {
 				prevSongs.push(currentSongIndex);
-
-				if (isPlaying) {
-					setNewSong(i);
-				} else {
-					setSongTitleAndArtist(i);
-				}
+                setNewSong(i);
 			}
 		});
 		songListDialog = builder.create();
 	}
 
-	private void setSongTitleAndArtist(int i) {
-		if (!isPlaying) {
-			SongItem item = songAdapter.getSongItem(i);
-			songNameTextView.setText(item.getTitle());
-			artistNameTextView.setText(item.getArtist());
-			albumArtImageView.setImageBitmap(item.getAlbumArt());
-		}
-	}
+//	private void setSongTitleAndArtist(int i) {
+//		if (!isPlaying) {
+//			SongItem item = songAdapter.getSongItem(i);
+//			songNameTextView.setText(item.getTitle());
+//			artistNameTextView.setText(item.getArtist());
+//			albumArtImageView.setImageBitmap(item.getAlbumArt());
+//		}
+//	}
 
 	private void setNewSong(int i) {
 
@@ -481,7 +409,6 @@ public class RunningActivity extends Activity {
 			if (st != null) {
 				st.stop();
 				st = null;
-				isPlaying = false;
 			}
 			SongItem item = songAdapter.getSongItem(i);
 			st = new SoundTouchPlayable(new SongProgressListener(),
@@ -491,10 +418,11 @@ public class RunningActivity extends Activity {
 			songNameTextView.setText(item.getTitle());
 			artistNameTextView.setText(item.getArtist());
 			albumArtImageView.setImageBitmap(item.getAlbumArt());
-			playImageButton.setBackgroundResource(R.drawable.icon_22165);
             tempoSeekBar.setProgress(percentToProg(1f));
-			st.play();
-			isPlaying = true;
+			if(isPlaying){
+                st.play();
+                isPlaying = true;
+            }
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -639,4 +567,78 @@ public class RunningActivity extends Activity {
 	public void setCurrentSongBpm(float currSongBpm) {
 		currentSongBpm = currSongBpm;
 	}
+
+    public void startClapMode(){
+        tempoSeekBar.setEnabled(false);
+        //Start listening for claps
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                clapDetector = new ClapDetector(mainActivity);
+                clapDetector.startRecord();
+            }
+        }).start();
+
+        //Update target percent change based on claps detected
+        //Taken from accelerometer onStepDetected
+        clapTargetHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                if(!refreshed){
+                    targetChange = 1f;
+                }
+                refreshed = false;
+            }
+        }, 0, 1500, TimeUnit.MILLISECONDS);
+
+        //Gently change real % change to target % change to avoid sudden jumps
+        targetToRealHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                float diff = targetChange - realChange;
+                if(Math.abs(diff) > 0.05f){
+                    realChange += (diff/Math.abs(diff))*0.05f;
+                } else {
+                    realChange = targetChange;
+                }
+
+                if(st != null){
+                    st.setTempo(realChange);
+                }
+
+                tempoSeekBar.setProgress(percentToProg(realChange));
+            }
+        }, 0, 200, TimeUnit.MILLISECONDS);
+    }
+
+    public void startAccelMode(){
+        tempoSeekBar.setEnabled(false);
+        accelTargetHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                if(!refreshed){
+                    targetChange = 1f;
+                }
+                refreshed = false;
+            }
+        }, 0, 1500, TimeUnit.MILLISECONDS);
+
+        //Gently change real % change to target % change to avoid sudden jumps
+        targetToRealHandle = clapExecutorService.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                float diff = targetChange - realChange;
+                if(Math.abs(diff) > 0.05f){
+                    realChange += (diff/Math.abs(diff))*0.05f;
+                } else {
+                    realChange = targetChange;
+                }
+
+                if(st != null){
+                    st.setTempo(realChange);
+                }
+                tempoSeekBar.setProgress(percentToProg(realChange));
+            }
+        }, 0, 200, TimeUnit.MILLISECONDS);
+    }
 }

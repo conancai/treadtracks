@@ -42,11 +42,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.treadtracksproto.Application"
-            android:label="@string/app_title"
-            android:screenOrientation="portrait" >
-        </activity>
-        <activity
             android:name="com.example.treadtracksproto.PlaylistActivity"
             android:label="@string/app_title"
             android:screenOrientation="portrait" >
