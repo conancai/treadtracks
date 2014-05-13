@@ -15,7 +15,7 @@ public class ClapDetector {
     RunningActivity mainActivity;
 
     int stepIndex = 0;
-    long [] stepTimes = new long[12];
+    long [] stepTimes = new long[8];
     int numSteps;
     private static final double STEP_TIMEOUT = 10000;
 
